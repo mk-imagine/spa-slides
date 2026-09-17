@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "spa-slides lint",
+    "verify": "spa-slides verify --expect-slides 35"
   },
   "dependencies": {
     "@mk-imagine/spa-slides": "0.1.0",

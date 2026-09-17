@@ -6,7 +6,6 @@ Presentation slides as React single-page apps: the flexibility and interactivity
 |---|---|
 | `packages/spa-slides/` | The library, `@mk-imagine/spa-slides`. See its [README](packages/spa-slides/README.md) |
 | `examples/git-workshop/` | A 35-slide static deck, ported from a Beamer workshop, that exercises the library |
-| `tools/verify-deck.mjs` | Opens a built deck from disk in Chromium and checks it |
 | `docker/run.sh` | Runs any command in the pinned Node + Playwright container |
 | `spike/` | The throwaway spike that chose the stack. Findings in [spike/SPIKE.md](spike/SPIKE.md) |
 
@@ -16,13 +15,14 @@ Nothing is installed on the host. Every command runs in the container:
 
 ```sh
 docker/run.sh npm ci                                   # install into Docker volumes
-docker/run.sh npm test                                 # library unit tests
+docker/run.sh npm test                                 # library tests, including the verifier against a fixture deck
 docker/run.sh npm run typecheck
 docker/run.sh npm run build                            # library, then the example deck
-docker/run.sh npm run verify                           # check the example deck
+docker/run.sh npm run lint                             # design rules on the example deck
+docker/run.sh npm run verify                           # check the built example deck
 EXPOSE_PORT=5173 docker/run.sh npm run dev -w git-workshop-deck -- --port 5173
 ```
 
-`npm run verify` writes to `examples/git-workshop/report/`: a screenshot of every slide, `contact-sheet.png` with all of them at once, `deck.pdf`, and `results.json`. It fails if any slide overflows, an image is broken, a screenshot placeholder is left, the bundled fonts do not load, the PDF page count does not match the slide count, or the console logs an error or warning.
+`lint` and `verify` are the library's `spa-slides` command; see the [library README](packages/spa-slides/README.md#checking-a-deck) for what they check. `verify` writes screenshots, a contact sheet, the PDF, and `results.json` to `examples/git-workshop/report/`.
 
 The built deck is `examples/git-workshop/dist/index.html`. Double-click it.

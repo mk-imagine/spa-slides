@@ -10,9 +10,7 @@
     "build": "npm run build -w @mk-imagine/spa-slides && npm run build -w git-workshop-deck",
     "typecheck": "npm run typecheck --workspaces",
     "test": "npm run test -w @mk-imagine/spa-slides",
-    "verify": "node tools/verify-deck.mjs examples/git-workshop --expect-slides 35"
-  },
-  "devDependencies": {
-    "playwright": "1.63.0"
+    "lint": "npm run lint -w git-workshop-deck",
+    "verify": "npm run verify -w git-workshop-deck"
   }
 }

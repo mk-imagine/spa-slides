@@ -1,0 +1,4 @@
+/* Deliberately not a bundled font: the fonts check must catch it. */
+.system-font {
+  font-family: Georgia, serif;
+}

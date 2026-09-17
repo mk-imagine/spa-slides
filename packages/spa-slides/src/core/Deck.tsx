@@ -1,10 +1,9 @@
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { Deck as RevealDeck } from '@revealjs/react';
 import RevealNotes from 'reveal.js/plugin/notes';
+import { SLIDE_HEIGHT, SLIDE_WIDTH } from './size.js';
 
-/** Logical slide size. Everything is laid out at this size and scaled to the screen. */
-export const SLIDE_WIDTH = 1920;
-export const SLIDE_HEIGHT = 1080;
+export { SLIDE_HEIGHT, SLIDE_WIDTH } from './size.js';
 
 export interface DeckMeta {
   title: string;

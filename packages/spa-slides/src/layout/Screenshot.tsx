@@ -1,5 +1,5 @@
 import type { ImageAsset } from '../assets.js';
-import { SLIDE_HEIGHT } from '../core/Deck.js';
+import { SLIDE_HEIGHT } from '../core/size.js';
 import { cropGeometry, type Crop } from './geometry.js';
 
 export type { Crop } from './geometry.js';

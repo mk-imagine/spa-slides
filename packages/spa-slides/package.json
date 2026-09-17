@@ -7,6 +7,9 @@
   "sideEffects": [
     "**/*.css"
   ],
+  "bin": {
+    "spa-slides": "./dist/cli/index.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -15,6 +18,14 @@
     "./vite": {
       "types": "./dist/vite/index.d.ts",
       "import": "./dist/vite/index.js"
+    },
+    "./eslint": {
+      "types": "./dist/lint/config.d.ts",
+      "import": "./dist/lint/config.js"
+    },
+    "./verify": {
+      "types": "./dist/verify/index.d.ts",
+      "import": "./dist/verify/index.js"
     },
     "./client": {
       "types": "./client.d.ts"
@@ -36,8 +47,11 @@
     "@fontsource-variable/jetbrains-mono": "5.3.0",
     "@revealjs/react": "0.2.2",
     "@vitejs/plugin-react": "6.1.1",
+    "eslint": "10.10.0",
     "image-size": "2.0.4",
+    "playwright": "1.63.0",
     "reveal.js": "6.0.2",
+    "typescript-eslint": "8.70.0",
     "vite-plugin-singlefile": "2.3.3"
   },
   "peerDependencies": {
