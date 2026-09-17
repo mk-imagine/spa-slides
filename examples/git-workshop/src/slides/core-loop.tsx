@@ -148,7 +148,7 @@ export function WritingTheSummary() {
       ]}
     >
       <p>
-        Desktop will not let you commit until you type one line in the box at the bottom left, labelled{' '}
+        Desktop will not let you commit until you type one line in the box at the bottom left, labeled{' '}
         <strong>Summary</strong>. Git calls that the commit message. It is the part your future self will actually read.
       </p>
       <Screenshot image={summaryBox} alt="GitHub Desktop, the empty Summary box" crop={{ bottom: 168 }} width={0.5} />

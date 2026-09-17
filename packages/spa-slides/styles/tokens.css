@@ -35,7 +35,7 @@
 
   --sps-radius: 10px;
 
-  /* Data visualisation. Categorical slots in fixed order; assign them in sequence, never cycled.
+  /* Data visualization. Categorical slots in fixed order; assign them in sequence, never cycled.
      Validated on the white slide surface (dataviz validate_palette.js): every hard check passes,
      but slots 3, 4 and 5 are under 3:1 contrast, so series drawn in them need direct labels. */
   --sps-series-1: #2a78d6;

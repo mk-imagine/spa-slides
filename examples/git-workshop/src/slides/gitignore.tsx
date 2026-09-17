@@ -25,7 +25,7 @@ export function GitignoreFile() {
         </>
       }
       notes={[
-        'Do not teach glob syntax. They need to recognise the file and trust it, not author it. Anyone who needs a custom rule will ask.',
+        'Do not teach glob syntax. They need to recognize the file and trust it, not author it. Anyone who needs a custom rule will ask.',
       ]}
     >
       <p>A plain text file listing what Git should pretend it cannot see.</p>

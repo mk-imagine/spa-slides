@@ -11,7 +11,7 @@ export interface LegendItem {
   shape?: 'line' | 'swatch';
 }
 
-/** The identity key for two or more series. Text stays in text colours; the key carries the colour. */
+/** The identity key for two or more series. Text stays in text colors; the key carries the color. */
 export function Legend({ items }: { items: LegendItem[] }) {
   return (
     <ul className="sps-legend">

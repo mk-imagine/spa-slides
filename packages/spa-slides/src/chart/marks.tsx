@@ -29,7 +29,7 @@ interface MarkLabelProps {
   children: ReactNode;
 }
 
-/** Label text, in text colours: identity comes from the mark it sits beside, never the text colour. */
+/** Label text, in text colors: identity comes from the mark it sits beside, never the text color. */
 function MarkLabel({ x, y, position, offset = [0, 0], children }: MarkLabelProps) {
   const { dx, dy, textAnchor, dominantBaseline } = labelPlacement(position);
   return (
@@ -171,7 +171,7 @@ export interface MarkerProps {
   hollow?: boolean;
 }
 
-/** A point mark with a ring in the surface colour, so it stays legible on top of lines. */
+/** A point mark with a ring in the surface color, so it stays legible on top of lines. */
 export function Marker({ x: xValue, y: yValue, series, tone, label, labelPosition = 'above', labelOffset, hollow = false }: MarkerProps) {
   const { x, y } = usePlot();
   const px = position(x, xValue, 'x');

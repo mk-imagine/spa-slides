@@ -134,7 +134,7 @@ function Live({ seed = 7, active }: Props & LiveProps) {
         </div>
 
         <div className="sim__field">
-          <span className="sim__label">Click the plot to add a point labelled</span>
+          <span className="sim__label">Click the plot to add a point labeled</span>
           <div className="sim__buttons">
             <button type="button" aria-pressed={addLabel === 0} onClick={() => setAddLabel(0)}>
               <span className="sim__swatch sim__swatch--0" /> 0

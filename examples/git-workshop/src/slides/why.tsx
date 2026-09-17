@@ -59,7 +59,7 @@ export function WhatIsWrong() {
       title="What is wrong with the folder"
       notes={[
         'Drive gives you offsite backup and that is genuinely valuable. It does not give you intent, and intent is the thing you actually need six months later.',
-        'Drive’s own version history is per-file, unlabelled, and time-based. Git’s is per-project, labelled, and reason-based.',
+        'Drive’s own version history is per-file, unlabeled, and time-based. Git’s is per-project, labeled, and reason-based.',
       ]}
     >
       <ul>

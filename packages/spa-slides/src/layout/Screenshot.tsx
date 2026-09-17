@@ -20,7 +20,7 @@ interface ImageScreenshot extends Sizing {
 }
 
 interface PlaceholderScreenshot extends Sizing {
-  /** What still needs capturing. Renders a labelled box, and the verifier fails the deck until it is replaced. */
+  /** What still needs capturing. Renders a labeled box, and the verifier fails the deck until it is replaced. */
   placeholder: string;
   image?: never;
   alt?: never;

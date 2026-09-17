@@ -75,7 +75,7 @@ See `examples/git-workshop` in this repository for a complete 35-slide deck.
 | `<StandoutSlide notes>` | Full-bleed, centered, for the one message to remember |
 | `<Columns widths>` | Side-by-side columns, one child per column. `widths={[54, 44]}` sets relative widths |
 | `<Screenshot image alt crop width maxHeight>` | A cropped image. `crop` trims source pixels from each edge; `width` is a fraction of the available width, `maxHeight` a fraction of the slide height |
-| `<Screenshot placeholder="…">` | A labelled box for a capture you have not taken yet. The verifier fails until it is replaced |
+| `<Screenshot placeholder="…">` | A labeled box for a capture you have not taken yet. The verifier fails until it is replaced |
 | `<MonoBlock align size>` | Verbatim monospace lines: file listings, terminal output |
 | `<Text as size tone align italic>` | Typed text variants, so slides never need ad-hoc sizes or colors |
 

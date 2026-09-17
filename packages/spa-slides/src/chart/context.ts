@@ -21,7 +21,7 @@ export function usePlot(): PlotState {
   return plot;
 }
 
-/** Class that sets a mark's colour from categorical slot `series` (1–8), or a neutral tone. */
+/** Class that sets a mark's color from categorical slot `series` (1–8), or a neutral tone. */
 export function markClass(series?: number, tone?: MarkTone): string {
   if (series !== undefined) {
     if (!Number.isInteger(series) || series < 1 || series > 8) {
@@ -32,7 +32,7 @@ export function markClass(series?: number, tone?: MarkTone): string {
   return `sps-tone-${tone ?? 'ink'}`;
 }
 
-/** Colours for marks that are not a series: `ink` for the main mark, `muted` for context. */
+/** Colors for marks that are not a series: `ink` for the main mark, `muted` for context. */
 export type MarkTone = 'ink' | 'muted';
 
 /** A scaled coordinate, refusing values the axis cannot place (such as 0 on a log axis). */
