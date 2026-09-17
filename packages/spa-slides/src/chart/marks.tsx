@@ -118,27 +118,42 @@ export function Rule({ x: xValue, y: yValue, label, dashed = false }: RuleProps)
   );
 }
 
-export interface SpanProps {
-  /** A vertical band between these x values. */
-  x0: number;
-  x1: number;
+export type SpanProps = {
   series?: number;
   tone?: MarkTone;
   label?: ReactNode;
-}
+} & (
+  | { /** A vertical band between these x values. */ x0: number; x1: number; y0?: never; y1?: never }
+  | { /** A horizontal band between these y values. */ y0: number; y1: number; x0?: never; x1?: never }
+);
 
-/** A shaded interval, such as a qualifying run of epochs or a training phase. */
-export function Span({ x0, x1, series, tone = 'muted', label }: SpanProps) {
-  const { x, height, clipId } = usePlot();
-  const left = Math.min(x(x0), x(x1));
-  const right = Math.max(x(x0), x(x1));
+/** A shaded interval: a vertical band (x0–x1) such as a qualifying run, or a horizontal one (y0–y1) such as a range of values. */
+export function Span({ series, tone = 'muted', label, ...band }: SpanProps) {
+  const { x, y, width, height, clipId } = usePlot();
+  const className = `sps-span ${markClass(series, series === undefined ? tone : undefined)}`;
+  if (band.x0 !== undefined) {
+    const left = Math.min(position(x, band.x0, 'x'), position(x, band.x1, 'x'));
+    const right = Math.max(position(x, band.x0, 'x'), position(x, band.x1, 'x'));
+    return (
+      <g>
+        <rect className={className} x={left} width={right - left} y={0} height={height} clipPath={`url(#${clipId})`} />
+        {label !== undefined && (
+          <MarkLabel x={(left + right) / 2} y={0} position="below">
+            {label}
+          </MarkLabel>
+        )}
+      </g>
+    );
+  }
+  const top = Math.min(position(y, band.y0, 'y'), position(y, band.y1, 'y'));
+  const bottom = Math.max(position(y, band.y0, 'y'), position(y, band.y1, 'y'));
   return (
     <g>
-      <rect className={`sps-span ${markClass(series, series === undefined ? tone : undefined)}`} x={left} width={right - left} y={0} height={height} clipPath={`url(#${clipId})`} />
+      <rect className={className} x={0} width={width} y={top} height={bottom - top} clipPath={`url(#${clipId})`} />
       {label !== undefined && (
-        <MarkLabel x={(left + right) / 2} y={0} position="below">
+        <text className="sps-mark-label" x={LABEL_GAP / 2} y={(top + bottom) / 2} dominantBaseline="middle">
           {label}
-        </MarkLabel>
+        </text>
       )}
     </g>
   );
@@ -152,16 +167,18 @@ export interface MarkerProps {
   label?: ReactNode;
   labelPosition?: LabelPosition;
   labelOffset?: [number, number];
+  /** An outline instead of a filled dot, as a second encoding (for example, "lost strength first"). */
+  hollow?: boolean;
 }
 
 /** A point mark with a ring in the surface colour, so it stays legible on top of lines. */
-export function Marker({ x: xValue, y: yValue, series, tone, label, labelPosition = 'above', labelOffset }: MarkerProps) {
+export function Marker({ x: xValue, y: yValue, series, tone, label, labelPosition = 'above', labelOffset, hollow = false }: MarkerProps) {
   const { x, y } = usePlot();
   const px = position(x, xValue, 'x');
   const py = position(y, yValue, 'y');
   return (
     <g>
-      <circle className={`sps-marker ${markClass(series, tone)}`} cx={px} cy={py} />
+      <circle className={`sps-marker ${markClass(series, tone)}${hollow ? ' sps-marker--hollow' : ''}`} cx={px} cy={py} />
       {label !== undefined && (
         <MarkLabel x={px} y={py} position={labelPosition} offset={labelOffset}>
           {label}

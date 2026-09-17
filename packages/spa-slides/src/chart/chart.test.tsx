@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { AxisX, Bar, Line, Plot } from './index.js';
+import { AxisX, Bar, Line, Marker, Plot, Span } from './index.js';
 import { barPath } from './marks.js';
 import { makeScale } from './scales.js';
 
@@ -61,6 +61,21 @@ describe('Bar', () => {
 
   it('draws with its series class', () => {
     expect(plot(<Bar at={0.5} value={7} series={3} />)).toContain('class="sps-bar sps-series-3"');
+  });
+});
+
+describe('Span', () => {
+  it('draws a horizontal band across the data area', () => {
+    // y domain 0–1 over a 288px data area: 0.9–1 is the top 28.8px.
+    const svg = plot(<Span y0={0.9} y1={1} />);
+    const rect = svg.match(/<rect class="sps-span[^"]*" x="([\d.]+)" width="([\d.]+)" y="([\d.]+)" height="([\d.]+)"/)!;
+    expect(rect.slice(1).map(Number)).toEqual([0, 456, 0, expect.closeTo(28.8, 6)]);
+  });
+});
+
+describe('Marker', () => {
+  it('can be drawn hollow', () => {
+    expect(plot(<Marker x={1} y={0.5} series={2} hollow />)).toContain('class="sps-marker sps-series-2 sps-marker--hollow"');
   });
 });
 

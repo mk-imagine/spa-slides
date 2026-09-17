@@ -274,6 +274,12 @@
   stroke-width: 2px;
 }
 
+.sps-marker--hollow {
+  fill: var(--sps-color-bg);
+  stroke: var(--sps-mark);
+  stroke-width: 3px;
+}
+
 .sps-bar {
   fill: var(--sps-mark);
 }
