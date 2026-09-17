@@ -37,7 +37,7 @@ mountDeck(
     <TitleSlide notes={['Opening notes for the verifier fixture deck.']} />
 
     {/* 2: clean. The cropped image extends past its frame on purpose; that is not overflow. */}
-    <Slide title="Cropped screenshot">
+    <Slide title="Cropped screenshot" footer="Fixture footer · exploratory">
       <Screenshot image={grid} alt="A grid of numbered colored cells" crop={{ left: 100, top: 100, right: 200, bottom: 100 }} />
     </Slide>
 

@@ -37,6 +37,13 @@
   justify-content: flex-start;
 }
 
+.sps-footer {
+  flex: none;
+  margin-top: var(--sps-space-3);
+  font-size: var(--sps-text-caption);
+  color: var(--sps-color-muted);
+}
+
 .sps-frame--title {
   justify-content: center;
 }

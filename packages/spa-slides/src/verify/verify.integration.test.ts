@@ -60,6 +60,10 @@ describe('verifyDeck on a deck with one deliberate failure per slide', () => {
     expect(check('pdf-pages')).toMatchObject({ pass: true, detail: { pdfPages: 8, slides: 8 } });
   });
 
+  it('keeps a footer on the slide without counting it as overflow', () => {
+    expect(result.slides[1]!.overflowCount).toBe(0);
+  });
+
   it('marks appendix slides', () => {
     expect(slidesWhere((s) => s.appendix)).toEqual([8]);
   });
