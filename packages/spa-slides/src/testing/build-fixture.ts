@@ -22,6 +22,7 @@ export async function buildFixtureDeck(name: string): Promise<string> {
     resolve: {
       alias: [
         { find: /^@mk-imagine\/spa-slides$/, replacement: join(PACKAGE, 'src/index.ts') },
+        { find: /^@mk-imagine\/spa-slides\/chart$/, replacement: join(PACKAGE, 'src/chart/index.ts') },
         { find: /^@mk-imagine\/spa-slides\/styles\.css$/, replacement: join(PACKAGE, 'styles/index.css') },
       ],
     },

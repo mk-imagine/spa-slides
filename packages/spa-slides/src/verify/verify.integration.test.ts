@@ -12,7 +12,7 @@ describe('verifyDeck on a deck with one deliberate failure per slide', () => {
   const slidesWhere = (failing: (s: VerifyResult['slides'][number]) => boolean) => result.slides.filter(failing).map((s) => s.slide);
 
   beforeAll(async () => {
-    result = await verifyDeck({ deckDir: await buildFixtureDeck('verify-deck'), expectSlides: 8 });
+    result = await verifyDeck({ deckDir: await buildFixtureDeck('verify-deck'), expectSlides: 9 });
   }, 180_000);
 
   it('opens the deck and counts its slides', () => {
@@ -42,6 +42,12 @@ describe('verifyDeck on a deck with one deliberate failure per slide', () => {
     expect(slidesWhere((s) => s.brokenImages.length > 0)).toEqual([5]);
   });
 
+  it('flags chart labels drawn on top of each other, and only there', () => {
+    expect(check('label-overlap').pass).toBe(false);
+    expect(slidesWhere((s) => s.labelOverlaps.length > 0)).toEqual([8]);
+    expect(result.slides[7]!.labelOverlaps[0]).toMatchObject({ a: expect.stringContaining('first label'), b: expect.stringContaining('second label') });
+  });
+
   it('flags the citation key that does not resolve', () => {
     expect(check('citations').pass).toBe(false);
     expect(check('citations').detail).toEqual([{ slide: 6, keys: ['nonexistent2020'] }]);
@@ -62,7 +68,7 @@ describe('verifyDeck on a deck with one deliberate failure per slide', () => {
   });
 
   it('exports a PDF with one page per slide', () => {
-    expect(check('pdf-pages')).toMatchObject({ pass: true, detail: { pdfPages: 8, slides: 8 } });
+    expect(check('pdf-pages')).toMatchObject({ pass: true, detail: { pdfPages: 9, slides: 9 } });
   });
 
   it('keeps a footer on the slide without counting it as overflow', () => {
@@ -70,6 +76,6 @@ describe('verifyDeck on a deck with one deliberate failure per slide', () => {
   });
 
   it('marks appendix slides', () => {
-    expect(slidesWhere((s) => s.appendix)).toEqual([8]);
+    expect(slidesWhere((s) => s.appendix)).toEqual([9]);
   });
 });

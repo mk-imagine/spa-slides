@@ -234,3 +234,109 @@
 .sps-references .csl-entry {
   display: inline;
 }
+
+/* ---- Charts ------------------------------------------------------------------------ */
+
+.sps-plot {
+  display: block;
+  /* Labels past the data area stay visible, so the verifier sees them if they leave the slide. */
+  overflow: visible;
+  font-family: var(--sps-font-body);
+}
+
+.sps-series-1 { --sps-mark: var(--sps-series-1); }
+.sps-series-2 { --sps-mark: var(--sps-series-2); }
+.sps-series-3 { --sps-mark: var(--sps-series-3); }
+.sps-series-4 { --sps-mark: var(--sps-series-4); }
+.sps-series-5 { --sps-mark: var(--sps-series-5); }
+.sps-series-6 { --sps-mark: var(--sps-series-6); }
+.sps-series-7 { --sps-mark: var(--sps-series-7); }
+.sps-series-8 { --sps-mark: var(--sps-series-8); }
+.sps-tone-ink { --sps-mark: var(--sps-color-fg); }
+.sps-tone-muted { --sps-mark: var(--sps-chart-muted-mark); }
+
+.sps-line {
+  fill: none;
+  stroke: var(--sps-mark);
+  stroke-width: var(--sps-chart-stroke);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sps-line--dashed {
+  stroke-dasharray: 12 10;
+}
+
+.sps-marker {
+  r: var(--sps-chart-marker-radius);
+  fill: var(--sps-mark);
+  stroke: var(--sps-color-bg);
+  stroke-width: 2px;
+}
+
+.sps-bar {
+  fill: var(--sps-mark);
+}
+
+.sps-span {
+  fill: var(--sps-mark);
+  opacity: 0.14;
+}
+
+.sps-whisker line {
+  stroke: var(--sps-color-fg);
+  stroke-width: 2px;
+}
+
+.sps-rule {
+  stroke: var(--sps-color-muted);
+  stroke-width: 2px;
+}
+
+.sps-rule--dashed {
+  stroke-dasharray: 8 8;
+}
+
+.sps-axis-line {
+  stroke: var(--sps-chart-axis);
+  stroke-width: 1px;
+}
+
+.sps-grid {
+  stroke: var(--sps-chart-grid);
+  stroke-width: 1px;
+}
+
+.sps-tick {
+  font-size: var(--sps-text-chart);
+  fill: var(--sps-color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sps-axis-label,
+.sps-mark-label {
+  font-size: var(--sps-text-chart);
+  fill: var(--sps-color-fg);
+}
+
+.sps-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sps-space-2) var(--sps-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--sps-text-chart);
+}
+
+.reveal .sps-legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--sps-space-1);
+  margin: 0;
+}
+
+.sps-legend-key {
+  flex: none;
+  overflow: visible;
+}

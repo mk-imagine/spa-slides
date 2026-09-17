@@ -49,7 +49,7 @@ describe('build steps', () => {
     await press(page, 'ArrowRight');
     await press(page, 'ArrowRight');
     await press(page, 'ArrowRight');
-    expect(await page.locator('section.present .sps-title').textContent()).toBe('Backup');
+    expect(await page.locator('section.present .sps-title').textContent()).toBe('Colliding labels');
     await page.close();
   });
 

@@ -1,4 +1,4 @@
-import type { Overflow, SlideReport } from './types.js';
+import type { LabelOverlap, Overflow, SlideReport } from './types.js';
 
 export interface MeasureArgs {
   index: number;
@@ -85,6 +85,21 @@ export async function measureSlide({ index, step, tolerance }: MeasureArgs): Pro
   }
   overflow.sort((a, b) => b.px - a.px);
 
+  // Chart labels are positioned by hand, so nothing stops two of them landing on each other.
+  const labels = [...section.querySelectorAll<SVGTextElement>('svg text')]
+    .filter((el) => (el.textContent ?? '').trim() !== '' && getComputedStyle(el).visibility !== 'hidden')
+    .map((el) => ({ el, box: el.getBoundingClientRect() }));
+  const labelOverlaps: LabelOverlap[] = [];
+  for (let i = 0; i < labels.length; i++) {
+    for (let j = i + 1; j < labels.length; j++) {
+      const a = labels[i]!.box;
+      const b = labels[j]!.box;
+      const across = (Math.min(a.right, b.right) - Math.max(a.left, b.left)) / scale;
+      const down = (Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)) / scale;
+      if (across > 4 && down > 4) labelOverlaps.push({ a: describe(labels[i]!.el), b: describe(labels[j]!.el), steps: [step] });
+    }
+  }
+
   return {
     slide: index + 1,
     title: (section.querySelector('.sps-title, .sps-deck-title')?.textContent ?? '').trim(),
@@ -99,6 +114,7 @@ export async function measureSlide({ index, step, tolerance }: MeasureArgs): Pro
     ),
     overflow,
     overflowCount: overflow.length,
+    labelOverlaps,
     fonts: [...fonts].sort(),
   };
 }

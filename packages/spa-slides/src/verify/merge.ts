@@ -22,6 +22,15 @@ export function mergeStepReports(reports: SlideReport[]): SlideReport {
     }
   }
   const merged = [...overflow.values()].sort((a, b) => b.px - a.px);
+
+  const overlaps = new Map<string, SlideReport['labelOverlaps'][number]>();
+  for (const report of reports) {
+    for (const o of report.labelOverlaps) {
+      const key = `${o.a}|${o.b}`;
+      const seen = overlaps.get(key);
+      overlaps.set(key, seen ? { ...seen, steps: [...new Set([...seen.steps, ...o.steps])].sort((a, b) => a - b) } : o);
+    }
+  }
   const union = (pick: (r: SlideReport) => string[]) => [...new Set(reports.flatMap(pick))].sort();
 
   return {
@@ -33,5 +42,6 @@ export function mergeStepReports(reports: SlideReport[]): SlideReport {
     overflow: merged.slice(0, MAX_REPORTED_OVERFLOWS),
     overflowCount: merged.length,
     fonts: union((r) => r.fonts),
+    labelOverlaps: [...overlaps.values()],
   };
 }

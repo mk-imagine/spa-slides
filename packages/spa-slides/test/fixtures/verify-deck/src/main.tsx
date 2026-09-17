@@ -2,6 +2,7 @@
 // reports each problem on the right slide and nowhere else.
 import { useEffect } from 'react';
 import { Cite, Deck, Screenshot, Slide, Step, TitleSlide, mountDeck, useStep } from '@mk-imagine/spa-slides';
+import { AxisX, Line, Plot } from '@mk-imagine/spa-slides/chart';
 import '@mk-imagine/spa-slides/styles.css';
 import './fixture.css';
 import grid from './images/grid.png?image';
@@ -81,7 +82,16 @@ mountDeck(
       <GrowsAtStepTwo />
     </Slide>
 
-    {/* 8: clean appendix slide */}
+    {/* 8: two line labels drawn on top of each other */}
+    <Slide title="Colliding labels">
+      <Plot width={1200} height={500} x={{ domain: [0, 10] }} y={{ domain: [0, 1] }} margin={{ right: 260 }} label="Two lines that end together">
+        <AxisX label="Epoch" />
+        <Line series={1} data={[[0, 0.2], [10, 0.9]]} label="first label" />
+        <Line series={2} data={[[0, 0.4], [10, 0.9]]} label="second label" />
+      </Plot>
+    </Slide>
+
+    {/* 9: clean appendix slide */}
     <Slide appendix title="Backup">
       <p>Nothing wrong here.</p>
     </Slide>

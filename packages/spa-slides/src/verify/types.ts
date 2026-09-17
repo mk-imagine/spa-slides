@@ -10,6 +10,12 @@ export interface Overflow {
   steps: number[];
 }
 
+export interface LabelOverlap {
+  a: string;
+  b: string;
+  steps: number[];
+}
+
 export interface SlideReport {
   /** 1-based, as the audience counts. */
   slide: number;
@@ -26,6 +32,8 @@ export interface SlideReport {
   placeholders: string[];
   /** Citation keys that did not resolve, across all steps. */
   missingCitations: string[];
+  /** Pairs of chart labels whose text overlaps, with the steps they overlap in. */
+  labelOverlaps: LabelOverlap[];
   /** The worst overflowing elements across all steps, largest first. */
   overflow: Overflow[];
   overflowCount: number;
@@ -40,6 +48,7 @@ export type CheckId =
   | 'images'
   | 'placeholders'
   | 'citations'
+  | 'label-overlap'
   | 'fonts'
   | 'speaker-view'
   | 'pdf-pages'

@@ -34,4 +34,30 @@
   --sps-color-standout-fg: #ffffff;
 
   --sps-radius: 10px;
+
+  /* Data visualisation. Categorical slots in fixed order; assign them in sequence, never cycled.
+     Validated on the white slide surface (dataviz validate_palette.js): every hard check passes,
+     but slots 3, 4 and 5 are under 3:1 contrast, so series drawn in them need direct labels. */
+  --sps-series-1: #2a78d6;
+  --sps-series-2: #eb6834;
+  --sps-series-3: #1baf7a;
+  --sps-series-4: #eda100;
+  --sps-series-5: #e87ba4;
+  --sps-series-6: #008300;
+  --sps-series-7: #4a3aa7;
+  --sps-series-8: #e34948;
+
+  /* Status: reserved meaning, never a series; always paired with a label. */
+  --sps-status-good: #0ca30c;
+  --sps-status-warning: #fab219;
+  --sps-status-serious: #ec835a;
+  --sps-status-critical: #d03b3b;
+
+  /* Chart chrome. Marks are heavier than on a dashboard, because slides are read from across a room. */
+  --sps-chart-grid: #e1e0d9;
+  --sps-chart-axis: #c3c2b7;
+  --sps-chart-muted-mark: #a8a69d;
+  --sps-chart-stroke: 4px;
+  --sps-chart-marker-radius: 8px;
+  --sps-text-chart: 24px;
 }

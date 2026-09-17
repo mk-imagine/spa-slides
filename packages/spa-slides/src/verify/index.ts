@@ -130,6 +130,14 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
       detail: unresolved.map((s) => ({ slide: s.slide, keys: s.missingCitations })),
     });
 
+    const colliding = slides.filter((s) => s.labelOverlaps.length > 0);
+    record({
+      id: 'label-overlap',
+      name: 'no chart labels overlap',
+      pass: colliding.length === 0,
+      detail: colliding.map((s) => ({ slide: s.slide, title: s.title, overlaps: s.labelOverlaps.slice(0, 3) })),
+    });
+
     // A font the deck does not bundle falls back to whatever the machine has, so text wraps
     // differently on the presentation laptop than it did here.
     const loaded = new Set(
