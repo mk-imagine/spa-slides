@@ -1,0 +1,11 @@
+export { mountDeck } from './core/mount.js';
+export { Deck, useDeckMeta, SLIDE_WIDTH, SLIDE_HEIGHT, type DeckProps, type DeckMeta, type Transition } from './core/Deck.js';
+export { Slide, type SlideProps } from './core/Slide.js';
+export { TitleSlide, type TitleSlideProps } from './core/TitleSlide.js';
+export { StandoutSlide, type StandoutSlideProps } from './core/StandoutSlide.js';
+export type { Notes } from './core/SpeakerNotes.js';
+export { Columns, type ColumnsProps } from './layout/Columns.js';
+export { Screenshot, type ScreenshotProps, type Crop } from './layout/Screenshot.js';
+export { MonoBlock, type MonoBlockProps } from './layout/MonoBlock.js';
+export { Text, type TextProps } from './layout/Text.js';
+export type { ImageAsset } from './assets.js';

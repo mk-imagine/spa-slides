@@ -1,0 +1,98 @@
+/* The React root sits between <body> and Reveal, so it must fill the viewport as well. */
+html,
+body,
+.sps-root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Reveal's print stylesheet un-clips html and body for pagination, but not the React root.
+   Without this, PDF export silently stops after the first page. */
+html.reveal-print body,
+html.reveal-print .sps-root {
+  height: auto;
+  overflow: visible;
+}
+
+.reveal-viewport {
+  background: var(--sps-color-bg);
+}
+
+.reveal {
+  font-family: var(--sps-font-body);
+  font-size: var(--sps-text-body);
+  line-height: var(--sps-leading);
+  color: var(--sps-color-fg);
+  --r-link-color: var(--sps-color-accent);
+}
+
+.reveal .controls,
+.reveal .progress {
+  color: var(--sps-color-accent);
+}
+
+.reveal .slides {
+  text-align: left;
+}
+
+.reveal :is(p, ul, ol, dl, pre, table, figure, blockquote) {
+  margin: 0;
+}
+
+/* Vertical rhythm: consecutive blocks in a flow get the same gap, whether they are
+   paragraphs, lists, screenshots, or column groups. */
+.reveal :is(.sps-body, .sps-column, .sps-title-extra, .sps-frame--standout) > * + * {
+  margin-top: var(--sps-space-3);
+}
+
+.reveal ul,
+.reveal ol {
+  padding-left: 1.25em;
+}
+
+.reveal li + li {
+  margin-top: var(--sps-space-1);
+}
+
+.reveal li::marker {
+  color: var(--sps-color-muted);
+}
+
+.reveal strong {
+  font-weight: var(--sps-weight-strong);
+}
+
+.reveal code {
+  font-family: var(--sps-font-mono);
+  font-size: 0.88em;
+}
+
+.reveal dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: var(--sps-space-4);
+  row-gap: var(--sps-space-2);
+}
+
+.reveal dt {
+  font-weight: var(--sps-weight-strong);
+}
+
+.reveal dd {
+  margin: 0;
+}
+
+.reveal table {
+  border-collapse: collapse;
+}
+
+.reveal :is(th, td) {
+  padding: var(--sps-space-1) var(--sps-space-3);
+  border-bottom: 1px solid var(--sps-color-border);
+  text-align: left;
+}
+
+.reveal th {
+  font-weight: var(--sps-weight-strong);
+}

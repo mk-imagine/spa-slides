@@ -1,0 +1,7 @@
+node_modules/
+dist/
+report/
+*.tsbuildinfo
+
+# The global gitignore excludes every images/ directory. Deck images are source, so track them.
+!**/src/images/

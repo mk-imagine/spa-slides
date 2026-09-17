@@ -1,0 +1,11 @@
+/* Import once from the deck: import '@mk-imagine/spa-slides/styles.css'.
+   Override any token afterwards in the deck's own CSS. */
+@import 'reveal.js/reset.css';
+@import 'reveal.js/reveal.css';
+/* Fonts are bundled, not system fonts, so a slide lays out identically on every machine,
+   including the container that runs the overflow check. */
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
+@import './tokens.css';
+@import './base.css';
+@import './components.css';

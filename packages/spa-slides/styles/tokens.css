@@ -1,0 +1,37 @@
+/* Design tokens: the only place raw values live. All sizes are in slide pixels (1920 × 1080). */
+:root {
+  --sps-font-body: 'Inter Variable', system-ui, sans-serif;
+  --sps-font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  --sps-text-deck-title: 88px;
+  --sps-text-deck-subtitle: 48px;
+  --sps-text-title: 60px;
+  --sps-text-large: 54px;
+  --sps-text-body: 40px;
+  --sps-text-small: 32px;
+  --sps-text-caption: 26px;
+  --sps-leading: 1.4;
+  --sps-weight-strong: 650;
+
+  --sps-space-1: 8px;
+  --sps-space-2: 16px;
+  --sps-space-3: 28px;
+  --sps-space-4: 44px;
+  --sps-space-5: 72px;
+
+  --sps-slide-padding-x: 112px;
+  --sps-slide-padding-y: 72px;
+
+  --sps-color-bg: #ffffff;
+  --sps-color-fg: #1d2530;
+  --sps-color-muted: #5b6675;
+  --sps-color-border: #d4dae1;
+  --sps-color-surface: #f2f4f7;
+  --sps-color-accent: #2563c9;
+  --sps-color-positive: #1f7a3d;
+  --sps-color-negative: #b3261e;
+  --sps-color-standout-bg: #1d2530;
+  --sps-color-standout-fg: #ffffff;
+
+  --sps-radius: 10px;
+}

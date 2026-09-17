@@ -1,0 +1,181 @@
+/* ---- Slide frames ------------------------------------------------------------------ */
+
+.sps-frame {
+  box-sizing: border-box;
+  height: 1080px;
+  padding: var(--sps-slide-padding-y) var(--sps-slide-padding-x);
+  display: flex;
+  flex-direction: column;
+}
+
+.sps-title {
+  flex: none;
+  margin: 0 0 var(--sps-space-4);
+  font-size: var(--sps-text-title);
+  font-weight: var(--sps-weight-strong);
+  line-height: 1.15;
+}
+
+.sps-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sps-body > * {
+  flex: none;
+}
+
+/* `safe`: when content is taller than the body it overflows downward, off the slide, where the
+   verifier sees it — instead of spilling upward over the title. */
+.sps-body--center {
+  justify-content: safe center;
+}
+
+.sps-body--top {
+  justify-content: flex-start;
+}
+
+.sps-frame--title {
+  justify-content: center;
+}
+
+.sps-deck-title {
+  margin: 0 0 var(--sps-space-2);
+  font-size: var(--sps-text-deck-title);
+  font-weight: var(--sps-weight-strong);
+  line-height: 1.1;
+}
+
+.sps-deck-subtitle {
+  margin: 0 0 var(--sps-space-5);
+  font-size: var(--sps-text-deck-subtitle);
+  color: var(--sps-color-muted);
+}
+
+.sps-byline p {
+  margin: 0;
+  font-size: var(--sps-text-small);
+}
+
+.sps-title-extra {
+  margin-top: var(--sps-space-5);
+}
+
+.sps-frame--standout {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: var(--sps-text-large);
+  font-weight: var(--sps-weight-strong);
+  line-height: 1.3;
+  color: var(--sps-color-standout-fg);
+}
+
+/* ---- Layout ------------------------------------------------------------------------ */
+
+.sps-columns {
+  display: grid;
+  column-gap: var(--sps-space-5);
+  align-items: start;
+}
+
+.sps-column {
+  min-width: 0;
+}
+
+.sps-shot {
+  position: relative;
+  box-sizing: border-box;
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid var(--sps-color-border);
+  border-radius: var(--sps-radius);
+}
+
+.sps-column > .sps-shot {
+  margin-inline: 0;
+}
+
+.sps-shot img {
+  position: absolute;
+  max-width: none;
+  height: auto;
+}
+
+.sps-shot--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sps-space-3);
+  border: 3px dashed var(--sps-color-negative);
+  font-family: var(--sps-font-mono);
+  font-size: var(--sps-text-caption);
+  color: var(--sps-color-negative);
+  text-align: center;
+}
+
+.sps-mono {
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  font-family: var(--sps-font-mono);
+  line-height: 1.45;
+  white-space: pre;
+}
+
+.sps-mono--center {
+  text-align: center;
+}
+
+.sps-mono--start {
+  text-align: left;
+}
+
+.sps-mono--body {
+  font-size: calc(var(--sps-text-body) * 0.88);
+}
+
+.sps-mono--small {
+  font-size: var(--sps-text-caption);
+}
+
+/* ---- Text -------------------------------------------------------------------------- */
+
+.sps-text--small {
+  font-size: var(--sps-text-small);
+}
+
+.sps-text--large {
+  font-size: var(--sps-text-large);
+  line-height: 1.3;
+}
+
+.sps-text--italic {
+  font-style: italic;
+}
+
+.sps-tone--muted {
+  color: var(--sps-color-muted);
+}
+
+.sps-tone--accent {
+  color: var(--sps-color-accent);
+}
+
+.sps-tone--positive {
+  color: var(--sps-color-positive);
+}
+
+.sps-tone--negative {
+  color: var(--sps-color-negative);
+}
+
+.sps-align--center {
+  text-align: center;
+}
+
+.sps-align--start {
+  text-align: left;
+}
