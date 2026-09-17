@@ -2,6 +2,8 @@ import type { Overflow, SlideReport } from './types.js';
 
 export interface MeasureArgs {
   index: number;
+  /** The build step the slide is showing. */
+  step: number;
   /** Overshoot at or below this many slide pixels is rounding, not a layout bug. */
   tolerance: number;
 }
@@ -10,7 +12,7 @@ export interface MeasureArgs {
  * Measures one slide. Runs inside the page: Playwright serializes the function's source,
  * so it must not reference anything outside its own body.
  */
-export async function measureSlide({ index, tolerance }: MeasureArgs): Promise<SlideReport> {
+export async function measureSlide({ index, step, tolerance }: MeasureArgs): Promise<SlideReport> {
   const section = document.querySelectorAll<HTMLElement>('.reveal .slides > section')[index];
   if (!section) throw new Error(`slide ${index + 1} does not exist`);
 
@@ -44,6 +46,8 @@ export async function measureSlide({ index, tolerance }: MeasureArgs): Promise<S
     if (el.closest('aside.notes')) continue;
     const own = el.getBoundingClientRect();
     if (own.width === 0 && own.height === 0) continue;
+    // Not shown at this step (a build that has not appeared yet). It is measured at the steps where it shows.
+    if (getComputedStyle(el).visibility === 'hidden') continue;
 
     const rendersText = [...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? '').trim() !== '');
     if (rendersText) {
@@ -77,7 +81,7 @@ export async function measureSlide({ index, tolerance }: MeasureArgs): Promise<S
       right: (right - bounds.right) / scale,
     };
     const [side, px] = (Object.entries(sides) as [Overflow['side'], number][]).sort((a, b) => b[1] - a[1])[0]!;
-    if (px > tolerance) overflow.push({ element: describe(el), within: inBody ? 'body' : 'slide', side, px: Math.round(px) });
+    if (px > tolerance) overflow.push({ element: describe(el), within: inBody ? 'body' : 'slide', side, px: Math.round(px), steps: [step] });
   }
   overflow.sort((a, b) => b.px - a.px);
 
@@ -85,11 +89,12 @@ export async function measureSlide({ index, tolerance }: MeasureArgs): Promise<S
     slide: index + 1,
     title: (section.querySelector('.sps-title, .sps-deck-title')?.textContent ?? '').trim(),
     appendix: section.getAttribute('data-visibility') === 'uncounted',
+    steps: section.querySelectorAll('.sps-step-marker').length,
     notes: (section.querySelector('aside.notes')?.textContent ?? '').replace(/\s+/g, ' ').trim(),
     images: images.length,
     brokenImages,
     placeholders: [...section.querySelectorAll('[data-placeholder]')].map((el) => el.getAttribute('data-placeholder') ?? ''),
-    overflow: overflow.slice(0, 5),
+    overflow,
     overflowCount: overflow.length,
     fonts: [...fonts].sort(),
   };

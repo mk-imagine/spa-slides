@@ -1,6 +1,7 @@
 export { mountDeck } from './core/mount.js';
 export { Deck, useDeckMeta, SLIDE_WIDTH, SLIDE_HEIGHT, type DeckProps, type DeckMeta, type Transition } from './core/Deck.js';
 export { Slide, type SlideProps } from './core/Slide.js';
+export { Step, useStep, useSteps, type StepProps, type StepState } from './core/steps.js';
 export { TitleSlide, type TitleSlideProps } from './core/TitleSlide.js';
 export { StandoutSlide, type StandoutSlideProps } from './core/StandoutSlide.js';
 export type { Notes } from './core/SpeakerNotes.js';

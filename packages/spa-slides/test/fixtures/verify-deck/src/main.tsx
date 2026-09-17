@@ -1,7 +1,7 @@
 // A deck with one deliberate failure per slide, so tests can check that the verifier
 // reports each problem on the right slide and nowhere else.
 import { useEffect } from 'react';
-import { Deck, Screenshot, Slide, TitleSlide, mountDeck } from '@mk-imagine/spa-slides';
+import { Deck, Screenshot, Slide, Step, TitleSlide, mountDeck, useStep } from '@mk-imagine/spa-slides';
 import '@mk-imagine/spa-slides/styles.css';
 import './fixture.css';
 import grid from './images/grid.png?image';
@@ -9,6 +9,26 @@ import grid from './images/grid.png?image';
 function LogsAnError() {
   useEffect(() => console.error('fixture console error'), []);
   return null;
+}
+
+/** Shows the step it reads, and at step 2 adds rows that do not fit: overflow in one build state only. */
+function GrowsAtStepTwo() {
+  const step = useStep();
+  return (
+    <>
+      <p data-testid="step">{step}</p>
+      <Step at={1}>
+        <p data-testid="from-step-one">Shown from step 1.</p>
+      </Step>
+      {step >= 2 && (
+        <ul>
+          {Array.from({ length: 16 }, (_, i) => (
+            <li key={i}>Row {i + 1}, added at step 2</li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
 }
 
 mountDeck(
@@ -46,7 +66,12 @@ mountDeck(
       <LogsAnError />
     </Slide>
 
-    {/* 7: clean appendix slide */}
+    {/* 7: builds; overflows at step 2 only */}
+    <Slide title="Builds" steps={2}>
+      <GrowsAtStepTwo />
+    </Slide>
+
+    {/* 8: clean appendix slide */}
     <Slide appendix title="Backup">
       <p>Nothing wrong here.</p>
     </Slide>

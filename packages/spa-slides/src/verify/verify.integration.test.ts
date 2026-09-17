@@ -1,14 +1,6 @@
-import { mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { build } from 'vite';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { spaSlides } from '../vite/index.js';
+import { buildFixtureDeck } from '../testing/build-fixture.js';
 import { verifyDeck, type CheckId, type VerifyResult } from './index.js';
-
-const PACKAGE = resolve(fileURLToPath(import.meta.url), '../../..');
-const FIXTURE = join(PACKAGE, 'test/fixtures/verify-deck');
 
 describe('verifyDeck on a deck with one deliberate failure per slide', () => {
   let result: VerifyResult;
@@ -20,22 +12,7 @@ describe('verifyDeck on a deck with one deliberate failure per slide', () => {
   const slidesWhere = (failing: (s: VerifyResult['slides'][number]) => boolean) => result.slides.filter(failing).map((s) => s.slide);
 
   beforeAll(async () => {
-    const work = mkdtempSync(join(tmpdir(), 'spa-slides-verify-'));
-    await build({
-      root: FIXTURE,
-      configFile: false,
-      logLevel: 'warn',
-      plugins: [spaSlides()],
-      // Build against this package's source, not a previously built dist/.
-      resolve: {
-        alias: [
-          { find: /^@mk-imagine\/spa-slides$/, replacement: join(PACKAGE, 'src/index.ts') },
-          { find: /^@mk-imagine\/spa-slides\/styles\.css$/, replacement: join(PACKAGE, 'styles/index.css') },
-        ],
-      },
-      build: { outDir: join(work, 'dist'), emptyOutDir: true },
-    });
-    result = await verifyDeck({ deckDir: work, expectSlides: 7 });
+    result = await verifyDeck({ deckDir: await buildFixtureDeck('verify-deck'), expectSlides: 8 });
   }, 180_000);
 
   it('opens the deck and counts its slides', () => {
@@ -43,10 +20,16 @@ describe('verifyDeck on a deck with one deliberate failure per slide', () => {
     expect(check('slide-count').pass).toBe(true);
   });
 
-  it('flags overflow on the overfull slide only, not on a cropped screenshot', () => {
+  it('flags overflow on the overfull slides only, not on a cropped screenshot', () => {
     expect(check('overflow').pass).toBe(false);
-    expect(slidesWhere((s) => s.overflowCount > 0)).toEqual([3]);
-    expect(result.slides[2]!.overflow[0]).toMatchObject({ within: 'body', side: 'bottom' });
+    expect(slidesWhere((s) => s.overflowCount > 0)).toEqual([3, 7]);
+    expect(result.slides[2]!.overflow[0]).toMatchObject({ within: 'body', side: 'bottom', steps: [0] });
+  });
+
+  it('measures every build step, and attributes overflow to the steps it occurs in', () => {
+    const builds = result.slides[6]!;
+    expect(builds.steps).toBe(2);
+    expect(builds.overflow.map((o) => o.steps)).toEqual(builds.overflow.map(() => [2]));
   });
 
   it('flags the placeholder', () => {
@@ -74,10 +57,10 @@ describe('verifyDeck on a deck with one deliberate failure per slide', () => {
   });
 
   it('exports a PDF with one page per slide', () => {
-    expect(check('pdf-pages')).toMatchObject({ pass: true, detail: { pdfPages: 7, slides: 7 } });
+    expect(check('pdf-pages')).toMatchObject({ pass: true, detail: { pdfPages: 8, slides: 8 } });
   });
 
   it('marks appendix slides', () => {
-    expect(slidesWhere((s) => s.appendix)).toEqual([7]);
+    expect(slidesWhere((s) => s.appendix)).toEqual([8]);
   });
 });

@@ -73,6 +73,27 @@
   color: var(--sps-color-standout-fg);
 }
 
+/* ---- Builds ------------------------------------------------------------------------ */
+
+/* Invisible click targets for Reveal; they take no space. */
+.sps-step-markers {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.sps-step {
+  transition:
+    opacity 250ms ease,
+    visibility 250ms;
+}
+
+.sps-step[data-shown='false'] {
+  opacity: 0;
+  visibility: hidden;
+}
+
 /* ---- Layout ------------------------------------------------------------------------ */
 
 .sps-columns {

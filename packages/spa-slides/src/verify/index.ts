@@ -3,8 +3,10 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chromium, type Page } from 'playwright';
 import { SLIDE_HEIGHT, SLIDE_WIDTH } from '../core/size.js';
+import { STEP_MARKER_CLASS } from '../core/step-marker.js';
 import { renderContactSheet } from './contact-sheet.js';
 import { measureSlide } from './measure.js';
+import { mergeStepReports } from './merge.js';
 import { countPdfPages } from './pdf.js';
 import type { Check, SlideReport, VerifyOptions, VerifyResult } from './types.js';
 
@@ -15,14 +17,22 @@ const TOLERANCE_PX = 1.5;
 const TIMEOUT_MS = 20_000;
 const VIEWPORT = { width: SLIDE_WIDTH, height: SLIDE_HEIGHT };
 
-async function showSlide(page: Page, index: number) {
-  await page.evaluate((i) => (location.hash = `#/${i}`), index);
+/** Shows slide `index` at build step `step` (0 is the slide on arrival). */
+async function showSlide(page: Page, index: number, step = 0) {
+  // Reveal's URL is #/slide/vertical/fragment, where fragment -1 means none shown yet.
+  await page.evaluate(({ i, fragment }) => (location.hash = `#/${i}/0/${fragment}`), { i: index, fragment: step - 1 });
   await page.waitForFunction(
-    ({ selector, i }) => document.querySelectorAll(selector)[i]?.classList.contains('present'),
-    { selector: SECTIONS, i: index },
+    ({ selector, marker, i, s }) => {
+      const section = document.querySelectorAll(selector)[i];
+      return section?.classList.contains('present') && section.querySelectorAll(`.${marker}.visible`).length === s;
+    },
+    { selector: SECTIONS, marker: STEP_MARKER_CLASS, i: index, s: step },
     { timeout: TIMEOUT_MS },
   );
 }
+
+/** Build animations would put screenshots and measurements mid-fade. */
+const NO_TRANSITIONS = '*, *::before, *::after { transition: none !important; animation: none !important; }';
 
 /**
  * Opens a built deck from disk in Chromium, the way an audience would get it, and checks every slide.
@@ -35,7 +45,10 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
   if (!existsSync(indexHtml)) throw new Error(`no built deck at ${indexHtml}. Build the deck first.`);
 
   const url = pathToFileURL(indexHtml).href;
-  const screenshotPath = (slide: number) => join(outDir, 'slides', `${String(slide).padStart(2, '0')}.png`);
+  const slideName = (slide: number) => String(slide).padStart(2, '0');
+  /** The slide in its final state; used for the contact sheet. */
+  const screenshotPath = (slide: number) => join(outDir, 'slides', `${slideName(slide)}.png`);
+  const stepScreenshotPath = (slide: number, step: number) => join(outDir, 'slides', `${slideName(slide)}-step-${step}.png`);
   rmSync(outDir, { recursive: true, force: true });
   mkdirSync(join(outDir, 'slides'), { recursive: true });
 
@@ -61,22 +74,28 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
     watchConsole(page, 'deck');
     await page.goto(`${url}?transition=none&backgroundTransition=none`);
     await page.waitForSelector('.reveal.ready', { timeout: TIMEOUT_MS });
+    await page.addStyleTag({ content: NO_TRANSITIONS });
 
     const slideCount = await page.locator(SECTIONS).count();
     record({ id: 'boot', name: 'deck opens from disk', pass: slideCount > 0, detail: { slides: slideCount } });
     if (options.expectSlides !== undefined) {
       record({
         id: 'slide-count',
-        name: `deck has ${options.expectSlides} slides`,
+        name: `deck has ${options.expectSlides} slide${options.expectSlides === 1 ? '' : 's'}`,
         pass: slideCount === options.expectSlides,
         detail: { slides: slideCount },
       });
     }
 
     for (let i = 0; i < slideCount; i++) {
-      await showSlide(page, i);
-      slides.push(await page.evaluate(measureSlide, { index: i, tolerance: TOLERANCE_PX }));
-      await page.screenshot({ path: screenshotPath(i + 1) });
+      const steps = await page.locator(SECTIONS).nth(i).locator(`.${STEP_MARKER_CLASS}`).count();
+      const reports: SlideReport[] = [];
+      for (let step = 0; step <= steps; step++) {
+        await showSlide(page, i, step);
+        reports.push(await page.evaluate(measureSlide, { index: i, step, tolerance: TOLERANCE_PX }));
+        await page.screenshot({ path: step === steps ? screenshotPath(i + 1) : stepScreenshotPath(i + 1, step) });
+      }
+      slides.push(mergeStepReports(reports));
     }
 
     const overflowing = slides.filter((s) => s.overflowCount > 0);
@@ -121,7 +140,7 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
 
     const withNotes = slides.find((s) => s.notes !== '');
     if (withNotes) {
-      await showSlide(page, withNotes.slide - 1);
+      await showSlide(page, withNotes.slide - 1, 0);
       const [speaker] = await Promise.all([live.waitForEvent('page'), page.keyboard.press('s')]);
       watchConsole(speaker, 'speaker view');
       const snippet = withNotes.notes.slice(0, 40);

@@ -4,8 +4,10 @@ export interface Overflow {
   /** `body` when content leaves the space under the title; `slide` when anything leaves the slide. */
   within: 'body' | 'slide';
   side: 'top' | 'bottom' | 'left' | 'right';
-  /** Overshoot in slide pixels. */
+  /** Overshoot in slide pixels, the largest across the steps it occurs in. */
   px: number;
+  /** The build steps in which it overflows (0 is the slide on arrival). */
+  steps: number[];
 }
 
 export interface SlideReport {
@@ -13,15 +15,19 @@ export interface SlideReport {
   slide: number;
   title: string;
   appendix: boolean;
+  /** How many clicks the slide has. Every step state is measured. */
+  steps: number;
   /** Speaker notes as plain text; empty when the slide has none. */
   notes: string;
   images: number;
+  /** Across all steps. */
   brokenImages: string[];
+  /** Across all steps. */
   placeholders: string[];
-  /** The worst overflowing elements, largest first. */
+  /** The worst overflowing elements across all steps, largest first. */
   overflow: Overflow[];
   overflowCount: number;
-  /** The first font family of every element that renders text. */
+  /** The first font family of every element that renders text, across all steps. */
   fonts: string[];
 }
 
