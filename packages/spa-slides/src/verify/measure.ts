@@ -94,6 +94,9 @@ export async function measureSlide({ index, step, tolerance }: MeasureArgs): Pro
     images: images.length,
     brokenImages,
     placeholders: [...section.querySelectorAll('[data-placeholder]')].map((el) => el.getAttribute('data-placeholder') ?? ''),
+    missingCitations: [...section.querySelectorAll('[data-citation-missing]')].flatMap((el) =>
+      (el.getAttribute('data-citation-missing') ?? '').split(' ').filter(Boolean),
+    ),
     overflow,
     overflowCount: overflow.length,
     fonts: [...fonts].sort(),

@@ -207,3 +207,30 @@
 .sps-align--start {
   text-align: left;
 }
+
+/* ---- Citations --------------------------------------------------------------------- */
+
+.sps-cite--missing {
+  color: var(--sps-color-negative);
+  font-weight: var(--sps-weight-strong);
+}
+
+.sps-references {
+  list-style: none;
+  padding: 0;
+}
+
+.sps-references li {
+  font-size: var(--sps-text-small);
+  padding-left: 2em;
+  text-indent: -2em;
+}
+
+.sps-references li + li {
+  margin-top: var(--sps-space-2);
+}
+
+.sps-references .csl-bib-body,
+.sps-references .csl-entry {
+  display: inline;
+}

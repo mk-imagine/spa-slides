@@ -10,3 +10,5 @@ export { Screenshot, type ScreenshotProps, type Crop } from './layout/Screenshot
 export { MonoBlock, type MonoBlockProps } from './layout/MonoBlock.js';
 export { Text, type TextProps } from './layout/Text.js';
 export type { ImageAsset } from './assets.js';
+export { Cite, References, type CiteProps, type ReferencesProps } from './cite/Cite.js';
+export type { BibEntry, Bibliography } from './cite/types.js';

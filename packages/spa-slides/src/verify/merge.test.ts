@@ -11,6 +11,7 @@ const base: SlideReport = {
   images: 0,
   brokenImages: [],
   placeholders: [],
+  missingCitations: [],
   overflow: [],
   overflowCount: 0,
   fonts: [],

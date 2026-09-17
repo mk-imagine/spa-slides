@@ -24,6 +24,8 @@ export interface SlideReport {
   brokenImages: string[];
   /** Across all steps. */
   placeholders: string[];
+  /** Citation keys that did not resolve, across all steps. */
+  missingCitations: string[];
   /** The worst overflowing elements across all steps, largest first. */
   overflow: Overflow[];
   overflowCount: number;
@@ -37,6 +39,7 @@ export type CheckId =
   | 'overflow'
   | 'images'
   | 'placeholders'
+  | 'citations'
   | 'fonts'
   | 'speaker-view'
   | 'pdf-pages'

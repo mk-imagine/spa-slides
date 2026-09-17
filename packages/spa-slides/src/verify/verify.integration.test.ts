@@ -42,6 +42,11 @@ describe('verifyDeck on a deck with one deliberate failure per slide', () => {
     expect(slidesWhere((s) => s.brokenImages.length > 0)).toEqual([5]);
   });
 
+  it('flags the citation key that does not resolve', () => {
+    expect(check('citations').pass).toBe(false);
+    expect(check('citations').detail).toEqual([{ slide: 6, keys: ['nonexistent2020'] }]);
+  });
+
   it('flags the unbundled font by family and slide', () => {
     expect(check('fonts').pass).toBe(false);
     expect(check('fonts').detail).toEqual([{ family: 'Georgia', slides: [6] }]);

@@ -9,8 +9,14 @@ export async function renderContactSheet(browser: Browser, slides: SlideReport[]
   const tiles = slides
     .map((s) => {
       const png = readFileSync(screenshotPath(s.slide)).toString('base64');
-      const failing = s.overflowCount > 0 || s.brokenImages.length > 0 || s.placeholders.length > 0;
-      const flags = [s.appendix && 'appendix', s.overflowCount > 0 && 'overflow', s.brokenImages.length > 0 && 'broken image', s.placeholders.length > 0 && 'placeholder']
+      const failing = s.overflowCount > 0 || s.brokenImages.length > 0 || s.placeholders.length > 0 || s.missingCitations.length > 0;
+      const flags = [
+        s.appendix && 'appendix',
+        s.overflowCount > 0 && 'overflow',
+        s.brokenImages.length > 0 && 'broken image',
+        s.placeholders.length > 0 && 'placeholder',
+        s.missingCitations.length > 0 && 'missing citation',
+      ]
         .filter(Boolean)
         .join(' · ');
       const caption = `${s.slide}. ${escape(s.title || '(untitled)')}${flags ? ` — ${flags}` : ''}`;

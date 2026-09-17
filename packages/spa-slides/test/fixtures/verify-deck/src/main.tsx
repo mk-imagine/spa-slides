@@ -1,7 +1,7 @@
 // A deck with one deliberate failure per slide, so tests can check that the verifier
 // reports each problem on the right slide and nowhere else.
 import { useEffect } from 'react';
-import { Deck, Screenshot, Slide, Step, TitleSlide, mountDeck, useStep } from '@mk-imagine/spa-slides';
+import { Cite, Deck, Screenshot, Slide, Step, TitleSlide, mountDeck, useStep } from '@mk-imagine/spa-slides';
 import '@mk-imagine/spa-slides/styles.css';
 import './fixture.css';
 import grid from './images/grid.png?image';
@@ -34,7 +34,14 @@ function GrowsAtStepTwo() {
 mountDeck(
   <Deck meta={{ title: 'Verifier fixture' }}>
     {/* 1: clean, with notes for the speaker-view check */}
-    <TitleSlide notes={['Opening notes for the verifier fixture deck.']} />
+    <TitleSlide notes={['Opening notes for the verifier fixture deck.']}>
+      <p data-testid="narrative">
+        After <Cite id="saxe2019" narrative />.
+      </p>
+      <p data-testid="parenthetical">
+        Two sources <Cite id={['saxe2019', 'rogers2004']} />.
+      </p>
+    </TitleSlide>
 
     {/* 2: clean. The cropped image extends past its frame on purpose; that is not overflow. */}
     <Slide title="Cropped screenshot" footer="Fixture footer · exploratory">
@@ -60,9 +67,12 @@ mountDeck(
       <img src="./does-not-exist.png" alt="" />
     </Slide>
 
-    {/* 6: an unbundled font and a console error */}
+    {/* 6: an unbundled font, a citation key that does not exist, and a console error */}
     <Slide title="Noisy">
       <p className="system-font">Set in a font the deck does not bundle.</p>
+      <p data-testid="missing">
+        As shown by <Cite id="nonexistent2020" />.
+      </p>
       <LogsAnError />
     </Slide>
 

@@ -1,4 +1,4 @@
-import { mkdtempSync } from 'node:fs';
+import { existsSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,11 +13,12 @@ const PACKAGE = resolve(fileURLToPath(import.meta.url), '../../..');
  */
 export async function buildFixtureDeck(name: string): Promise<string> {
   const deckDir = mkdtempSync(join(tmpdir(), `spa-slides-${name}-`));
+  const root = join(PACKAGE, 'test/fixtures', name);
   await build({
-    root: join(PACKAGE, 'test/fixtures', name),
+    root,
     configFile: false,
     logLevel: 'warn',
-    plugins: [spaSlides()],
+    plugins: [spaSlides({ bibliography: existsSync(join(root, 'references.bib')) ? 'references.bib' : [] })],
     resolve: {
       alias: [
         { find: /^@mk-imagine\/spa-slides$/, replacement: join(PACKAGE, 'src/index.ts') },

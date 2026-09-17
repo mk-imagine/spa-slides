@@ -122,6 +122,14 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
       detail: placeholders.map((s) => ({ slide: s.slide, placeholders: s.placeholders })),
     });
 
+    const unresolved = slides.filter((s) => s.missingCitations.length > 0);
+    record({
+      id: 'citations',
+      name: 'every citation resolves',
+      pass: unresolved.length === 0,
+      detail: unresolved.map((s) => ({ slide: s.slide, keys: s.missingCitations })),
+    });
+
     // A font the deck does not bundle falls back to whatever the machine has, so text wraps
     // differently on the presentation laptop than it did here.
     const loaded = new Set(
