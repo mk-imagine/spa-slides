@@ -1,12 +1,15 @@
 export { Plot, type PlotProps, type Margin } from './Plot.js';
 export { AxisX, AxisY, type AxisProps } from './Axis.js';
 export {
+  Band,
   Bar,
   Line,
   Marker,
   Rule,
   Span,
   Whisker,
+  type BandPoint,
+  type BandProps,
   type BarProps,
   type LabelPosition,
   type LineProps,

@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { AxisX, Bar, Line, Marker, Plot, Span } from './index.js';
+import { AxisX, Band, Bar, Line, Marker, Plot, Span } from './index.js';
 import { barPath } from './marks.js';
 import { makeScale } from './scales.js';
 
@@ -36,6 +36,20 @@ describe('Line', () => {
 
   it('rejects a series outside the eight slots', () => {
     expect(() => plot(<Line series={9} data={[[0, 0]]} />)).toThrow(/slot from 1 to 8/);
+  });
+});
+
+describe('Band', () => {
+  it('draws the high edge forward and the low edge back, closed', () => {
+    const svg = plot(<Band series={1} data={[[0, 0.2, 0.4], [10, 0.3, 0.6]]} />);
+    const d = svg.match(/class="sps-band[^"]*" d="([^"]*)"/)![1]!;
+    expect(d.startsWith('M')).toBe(true);
+    expect(d.endsWith('Z')).toBe(true);
+    expect(d.split('L')).toHaveLength(4);
+  });
+
+  it('draws nothing when fewer than two points have both edges', () => {
+    expect(plot(<Band series={1} data={[[0, 0.2, 0.4], [10, null, null]]} />)).not.toContain('sps-band');
   });
 });
 

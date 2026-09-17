@@ -75,6 +75,26 @@ export function Line({ data, series, tone, dashed = false, label, labelPosition 
   );
 }
 
+/** A band's value at one x: the low and high edge of the range there. */
+export type BandPoint = [x: number, low: number | null, high: number | null];
+
+export interface BandProps {
+  data: BandPoint[];
+  /** Categorical slot, 1-8. Matches the line the band belongs to. */
+  series?: number;
+  tone?: MarkTone;
+}
+
+/** The spread around a line, such as the range over runs. Drawn as a wash, under the line it belongs to. */
+export function Band({ data, series, tone }: BandProps) {
+  const { x, y, clipId } = usePlot();
+  const defined = data.filter((p): p is [number, number, number] => p[1] !== null && p[2] !== null && Number.isFinite(p[1]) && Number.isFinite(p[2]));
+  if (defined.length < 2) return null;
+  const top = defined.map((p) => `${position(x, p[0], 'x')},${position(y, p[2], 'y')}`);
+  const bottom = [...defined].reverse().map((p) => `${position(x, p[0], 'x')},${position(y, p[1], 'y')}`);
+  return <path className={`sps-band ${markClass(series, tone)}`} d={`M${top.join('L')}L${bottom.join('L')}Z`} clipPath={`url(#${clipId})`} />;
+}
+
 export interface RuleProps {
   /** A horizontal rule at this y value. */
   y?: number;

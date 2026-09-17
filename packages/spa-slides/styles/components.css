@@ -255,6 +255,12 @@
 .sps-tone-ink { --sps-mark: var(--sps-color-fg); }
 .sps-tone-muted { --sps-mark: var(--sps-chart-muted-mark); }
 
+.sps-band {
+  fill: var(--sps-mark);
+  fill-opacity: 0.16;
+  stroke: none;
+}
+
 .sps-line {
   fill: none;
   stroke: var(--sps-mark);
