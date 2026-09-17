@@ -1,0 +1,106 @@
+.sim {
+  display: grid;
+  grid-template-columns: 760px 1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.sim__canvas {
+  display: block;
+  width: 760px;
+  height: 760px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.sim__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-size: var(--text-small);
+}
+
+.sim__field label,
+.sim__label {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--color-muted);
+}
+
+.sim__range {
+  width: 100%;
+  accent-color: var(--color-accent);
+}
+
+.sim__buttons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.sim button {
+  font: inherit;
+  font-size: var(--text-caption);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-fg);
+  cursor: pointer;
+}
+
+.sim button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.sim button[aria-pressed='true'] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.sim__swatch {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.sim__swatch--0 {
+  background: var(--color-class-0);
+}
+
+.sim__swatch--1 {
+  background: var(--color-class-1);
+}
+
+.sim__readout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sim__mono {
+  font-family: var(--font-mono);
+}
+
+.sim__spark {
+  width: 100%;
+  height: 150px;
+  margin-top: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sim__spark polyline {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 3;
+}
+
+.sim__note {
+  font-size: var(--text-caption);
+  color: var(--color-muted);
+}

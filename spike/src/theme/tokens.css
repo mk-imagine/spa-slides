@@ -1,0 +1,29 @@
+/* Design tokens: the only place raw values live. Slides and components reference these. */
+:root {
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --text-title: 80px;
+  --text-heading: 56px;
+  --text-body: 36px;
+  --text-small: 28px;
+  --text-caption: 22px;
+
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 40px;
+  --space-5: 64px;
+
+  --color-bg: #ffffff;
+  --color-fg: #1f2933;
+  --color-muted: #5f6b7a;
+  --color-border: #d5dbe2;
+  --color-surface: #f3f5f8;
+  --color-accent: #2f6fdf;
+  --color-on-accent: #ffffff;
+  --color-class-0: #2b7bb9;
+  --color-class-1: #c0304f;
+
+  --radius: 10px;
+}
