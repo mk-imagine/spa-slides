@@ -8,6 +8,21 @@ can tell you it is not broken.
 This is a plan, not a specification. Each step below ends in something running, and the step
 after it is designed from what that taught us rather than from this document.
 
+## Where the slide numbers come from
+
+Every slide number below belongs to the **staged-introduction talk**, a deck built with this
+library over in the psy-research project. It is not the example deck in this repository, and it
+is not a dependency: the library has to keep working without it, and nothing here may require it.
+
+It earns its place in this plan because it is the only thing that has asked for any of this.
+Fourteen of its slides are waiting on capabilities the library does not have — live models,
+scrubbable replays, an explorer, a draggable widget — and designing against slides that exist
+keeps the primitives honest in a way that designing against imagined ones does not. Where a step
+below names a slide, it is naming a concrete case the design has to satisfy.
+
+That deck is also the reason the four-places problem below is not hypothetical. It exports a PDF,
+it is presented from a speaker view, and it is checked by `spa-slides verify` on every change.
+
 ## Why this is not just "add some animation"
 
 A slide that animates is easy. A slide that animates **and** survives the four places a deck has
@@ -29,7 +44,6 @@ have all four is that **it already solved them once**, for builds.
 counts how many Reveal has marked `visible`:
 
 ```tsx
-// core/steps.tsx
 const read = () => setStep(container.querySelectorAll(`.${STEP_MARKER_CLASS}.visible`).length);
 const observer = new MutationObserver(read);
 ```
@@ -174,8 +188,8 @@ and a claim in a comment does not.
   retire; where the designed figure is a genuinely different composition, both stay and the
   slide declares which one print gets.
 - **`--expect-slides`.** Interactivity must not change the slide count.
-- **Determinism.** Seeds are pinned and checked in, as `scripts/find-toy-seed.ts` already does
-  for the toy network.
+- **Determinism.** Seeds are pinned and checked in, as the talk's seed-finding script already
+  does for its toy network.
 
 ## Open questions
 
