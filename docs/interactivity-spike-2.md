@@ -76,10 +76,33 @@ it cannot ruin a talk.
 
 ## What is still open
 
-**The override does not cross windows.** The key toggle is per-window React state, so pressing it
-in the audience window will not move the speaker view, and vice versa. Fragments sync because
-Reveal mirrors them; this does not. Either the override rides on something Reveal syncs, or the
-speaker view needs telling separately. Worth settling before the key is offered to presenters.
+**Only the key toggle fails to cross windows** — and it is worth being precise about which of the
+seven triggers does what, because "the override does not cross windows" reads as a much bigger
+problem than it is.
+
+Nothing is synchronized between the two windows. Each computes its own answer, so they agree
+whenever the input is the same in both:
+
+| Trigger | Agree? | Why |
+|---|---|---|
+| print, the verifier, reduced-motion | yes | each window reads the same environment |
+| a deterministic failure | yes | both windows run the same code and both throw |
+| a failure that happens in one window only | **no** | only that window falls back |
+| the key toggle | **no** | the keypress reaches one window |
+
+Measured, served over http. A component throwing unconditionally fell back in the audience window
+*and* in both of the speaker view's preview frames, independently and with no synchronization. A
+component rigged to throw only in the top-level window left the speaker view showing the live
+version while the projector showed the still.
+
+So the error path is not the problem it first looks like: a real failure — a null access, a bad
+index — is deterministic, and both windows land on the still. The exposure is a failure that is
+*not* deterministic, which is the same class of bug that makes a slide flaky anyway.
+
+The key toggle is the genuine gap. If a presenter hits it because something looks wrong on the
+projector, their speaker view will not follow. Either it rides on something Reveal already
+mirrors, or the speaker view is told separately, and that should be settled before the key is
+offered to anyone.
 
 **The key is provisional.** `t` is free of Reveal's own bindings, but was not tested inside the
 speaker view, and must not be something a presenter's clicker emits.
