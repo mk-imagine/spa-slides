@@ -8,6 +8,7 @@
   --sps-text-title: 60px;
   --sps-text-large: 54px;
   --sps-text-body: 40px;
+  --sps-text-section: 40px;
   --sps-text-small: 32px;
   --sps-text-caption: 26px;
   --sps-leading: 1.4;
@@ -19,8 +20,15 @@
   --sps-space-4: 44px;
   --sps-space-5: 72px;
 
+  /* Spacing inside one visual (label, chart, legend, caption), and between separate blocks.
+     The contrast between them is what makes two visuals read as two. */
+  --sps-figure-gap: var(--sps-space-1);
+  --sps-flow-gap: var(--sps-space-3);
+
   --sps-slide-padding-x: 112px;
-  --sps-slide-padding-y: 72px;
+  /* 5.2% of the slide's height: enough of an edge to read as a margin on a projector, and no
+     more, because separation between the blocks on a slide buys more legibility than its rim. */
+  --sps-slide-padding-y: 56px;
 
   --sps-color-bg: #ffffff;
   --sps-color-fg: #1d2530;
