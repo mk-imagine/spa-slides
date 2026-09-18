@@ -113,6 +113,73 @@
   min-width: 0;
 }
 
+/* One visual and its own text, held together: the parts sit close, so that the flow gap between
+   this figure and whatever follows reads as the larger break. */
+.sps-figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sps-figure-gap);
+  align-items: start;
+  margin: 0;
+}
+
+.sps-figure__label {
+  font-size: var(--sps-text-caption);
+  font-weight: var(--sps-weight-strong);
+}
+
+.sps-figure__caption {
+  font-size: var(--sps-text-caption);
+}
+
+/* A column of blocks, spaced by the container rather than by each child's margin, so that
+   wrapping content in one never leaves its children touching. */
+.sps-stack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sps-stack--tight {
+  gap: var(--sps-figure-gap);
+}
+
+.sps-stack--flow {
+  gap: var(--sps-flow-gap);
+}
+
+.sps-stack--loose {
+  gap: var(--sps-space-4);
+}
+
+/* A heading and the content it introduces. The heading sits close to its own content, so the
+   larger gap lands before the section and the heading reads as belonging to what follows. */
+.sps-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sps-figure-gap);
+  min-width: 0;
+}
+
+.sps-section__title {
+  margin: 0;
+  font-size: var(--sps-text-section);
+  font-weight: var(--sps-weight-strong);
+  line-height: 1.2;
+}
+
+/* Two sections in a row need more between them than a section needs inside it, whatever the
+   flow around them is doing. */
+.reveal .sps-section + .sps-section {
+  margin-top: var(--sps-space-2);
+}
+
+/* A figure's, a stack's and a section's parts are spaced by the container's gap, so the flow
+   rhythm, which spaces siblings with margins, must not add to them. */
+.reveal :is(.sps-figure, .sps-stack, .sps-section) > * + * {
+  margin-top: 0;
+}
+
 .sps-shot {
   position: relative;
   box-sizing: border-box;
