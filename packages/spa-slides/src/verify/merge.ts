@@ -39,6 +39,8 @@ export function mergeStepReports(reports: SlideReport[]): SlideReport {
     brokenImages: union((r) => r.brokenImages),
     placeholders: union((r) => r.placeholders),
     missingCitations: union((r) => r.missingCitations),
+    citations: union((r) => r.citations),
+    references: union((r) => r.references),
     overflow: merged.slice(0, MAX_REPORTED_OVERFLOWS),
     overflowCount: merged.length,
     fonts: union((r) => r.fonts),

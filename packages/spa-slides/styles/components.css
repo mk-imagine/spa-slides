@@ -297,6 +297,17 @@
   margin-top: var(--sps-space-2);
 }
 
+/* A bibliography set in columns, balanced across them. An entry is a unit, so it never breaks
+   across a column boundary, and at this length the entries read at caption size. */
+.sps-references-columns {
+  column-gap: var(--sps-space-5);
+}
+
+.sps-references-columns .sps-references li {
+  font-size: var(--sps-text-caption);
+  break-inside: avoid;
+}
+
 .sps-references .csl-bib-body,
 .sps-references .csl-entry {
   display: inline;

@@ -32,6 +32,10 @@ export interface SlideReport {
   placeholders: string[];
   /** Citation keys that did not resolve, across all steps. */
   missingCitations: string[];
+  /** Citation keys cited on this slide, across all steps. */
+  citations: string[];
+  /** Citation keys this slide lists in a reference list, across all steps. */
+  references: string[];
   /** Pairs of chart labels whose text overlaps, with the steps they overlap in. */
   labelOverlaps: LabelOverlap[];
   /** The worst overflowing elements across all steps, largest first. */
@@ -48,6 +52,7 @@ export type CheckId =
   | 'images'
   | 'placeholders'
   | 'citations'
+  | 'references-cited'
   | 'label-overlap'
   | 'fonts'
   | 'speaker-view'

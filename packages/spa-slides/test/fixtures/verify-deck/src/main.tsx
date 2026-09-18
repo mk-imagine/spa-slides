@@ -1,7 +1,7 @@
 // A deck with one deliberate failure per slide, so tests can check that the verifier
 // reports each problem on the right slide and nowhere else.
 import { useEffect } from 'react';
-import { Cite, Deck, Screenshot, Slide, Step, TitleSlide, mountDeck, useStep } from '@mk-imagine/spa-slides';
+import { Cite, Deck, References, Screenshot, Slide, Step, TitleSlide, mountDeck, useStep } from '@mk-imagine/spa-slides';
 import { AxisX, Line, Plot } from '@mk-imagine/spa-slides/chart';
 import '@mk-imagine/spa-slides/styles.css';
 import './fixture.css';
@@ -91,9 +91,10 @@ mountDeck(
       </Plot>
     </Slide>
 
-    {/* 9: clean appendix slide */}
+    {/* 9: lists a reference the deck never cites */}
     <Slide appendix title="Backup">
       <p>Nothing wrong here.</p>
+      <References />
     </Slide>
   </Deck>,
 );
