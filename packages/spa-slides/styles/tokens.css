@@ -55,6 +55,20 @@
   --sps-series-7: #4a3aa7;
   --sps-series-8: #e34948;
 
+  /* Ordinal: one hue in even lightness steps, for series that have an order (a dimension's rank,
+     a stage, a tier). Kept clear of the categorical hues a deck gives fixed meanings, so an
+     ordered series never wears a color that means something else. The lightest step holds 2.08:1
+     on the slide, above the 2:1 an ordinal ramp needs; adjacent steps are close by design, so a
+     chart using it carries identity by order or direct labels, not by color alone. */
+  --sps-ordinal-1: #b9a7f0;
+  --sps-ordinal-2: #a28ce9;
+  --sps-ordinal-3: #8b71e0;
+  --sps-ordinal-4: #7457d4;
+  --sps-ordinal-5: #5d3fc4;
+  --sps-ordinal-6: #4a2fae;
+  --sps-ordinal-7: #382293;
+  --sps-ordinal-8: #281670;
+
   /* Status: reserved meaning, never a series; always paired with a label. */
   --sps-status-good: #0ca30c;
   --sps-status-warning: #fab219;

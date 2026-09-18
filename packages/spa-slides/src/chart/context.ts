@@ -21,8 +21,27 @@ export function usePlot(): PlotState {
   return plot;
 }
 
-/** Class that sets a mark's color from categorical slot `series` (1–8), or a neutral tone. */
-export function markClass(series?: number, tone?: MarkTone): string {
+/**
+ * Class that sets a mark's color: categorical slot `series` (1–8) for identity, `ordinal`
+ * (1–8) for a place in an order, or a neutral tone.
+ *
+ * `ordinal` is one hue in even lightness steps, so the reader sees the order in the color and
+ * an ordered series never borrows a categorical slot that means something else in the deck.
+ * Its steps are deliberately close together, which is what makes them read as one scale, so a
+ * chart using it has to carry identity some other way: an order the reader can follow along an
+ * axis, or direct labels. It is the wrong choice when the reader must pick one series out of
+ * eight by its color.
+ */
+export function markClass(series?: number, tone?: MarkTone, ordinal?: number): string {
+  if (series !== undefined && ordinal !== undefined) {
+    throw new Error('[spa-slides] a mark takes series or ordinal, not both');
+  }
+  if (ordinal !== undefined) {
+    if (!Number.isInteger(ordinal) || ordinal < 1 || ordinal > 8) {
+      throw new Error(`[spa-slides] ordinal must be a step from 1 to 8, got ${ordinal}`);
+    }
+    return `sps-ordinal-${ordinal}`;
+  }
   if (series !== undefined) {
     if (!Number.isInteger(series) || series < 1 || series > 8) {
       throw new Error(`[spa-slides] series must be a slot from 1 to 8, got ${series}`);
