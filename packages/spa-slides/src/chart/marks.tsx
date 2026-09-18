@@ -46,6 +46,8 @@ export interface LineProps {
   data: Point[];
   /** Categorical slot, 1–8. */
   series?: number;
+  /** Step in an ordinal ramp (1-8), for a series with an order. Not with `series`. */
+  ordinal?: number;
   tone?: MarkTone;
   /** For predictions and theory curves, not for gridlines. */
   dashed?: boolean;
@@ -55,14 +57,14 @@ export interface LineProps {
   labelOffset?: [number, number];
 }
 
-export function Line({ data, series, tone, dashed = false, label, labelPosition = 'right', labelOffset }: LineProps) {
+export function Line({ data, series, tone, ordinal, dashed = false, label, labelPosition = 'right', labelOffset }: LineProps) {
   const { x, y, clipId } = usePlot();
   const path = d3line<Point>()
     .defined((p) => p[1] !== null && Number.isFinite(p[1]))
     .x((p) => position(x, p[0], 'x'))
     .y((p) => position(y, p[1] as number, 'y'))(data);
   const last = [...data].reverse().find((p) => p[1] !== null && Number.isFinite(p[1]));
-  const classes = ['sps-line', markClass(series, tone), dashed ? 'sps-line--dashed' : ''].filter(Boolean).join(' ');
+  const classes = ['sps-line', markClass(series, tone, ordinal), dashed ? 'sps-line--dashed' : ''].filter(Boolean).join(' ');
   return (
     <g>
       <path className={classes} d={path ?? ''} clipPath={`url(#${clipId})`} />
@@ -82,17 +84,19 @@ export interface BandProps {
   data: BandPoint[];
   /** Categorical slot, 1-8. Matches the line the band belongs to. */
   series?: number;
+  /** Step in an ordinal ramp (1-8), for a series with an order. Not with `series`. */
+  ordinal?: number;
   tone?: MarkTone;
 }
 
 /** The spread around a line, such as the range over runs. Drawn as a wash, under the line it belongs to. */
-export function Band({ data, series, tone }: BandProps) {
+export function Band({ data, series, tone, ordinal }: BandProps) {
   const { x, y, clipId } = usePlot();
   const defined = data.filter((p): p is [number, number, number] => p[1] !== null && p[2] !== null && Number.isFinite(p[1]) && Number.isFinite(p[2]));
   if (defined.length < 2) return null;
   const top = defined.map((p) => `${position(x, p[0], 'x')},${position(y, p[2], 'y')}`);
   const bottom = [...defined].reverse().map((p) => `${position(x, p[0], 'x')},${position(y, p[1], 'y')}`);
-  return <path className={`sps-band ${markClass(series, tone)}`} d={`M${top.join('L')}L${bottom.join('L')}Z`} clipPath={`url(#${clipId})`} />;
+  return <path className={`sps-band ${markClass(series, tone, ordinal)}`} d={`M${top.join('L')}L${bottom.join('L')}Z`} clipPath={`url(#${clipId})`} />;
 }
 
 export interface RuleProps {
@@ -140,6 +144,8 @@ export function Rule({ x: xValue, y: yValue, label, dashed = false }: RuleProps)
 
 export type SpanProps = {
   series?: number;
+  /** Step in an ordinal ramp (1-8), for a series with an order. Not with `series`. */
+  ordinal?: number;
   tone?: MarkTone;
   label?: ReactNode;
 } & (
@@ -148,9 +154,9 @@ export type SpanProps = {
 );
 
 /** A shaded interval: a vertical band (x0–x1) such as a qualifying run, or a horizontal one (y0–y1) such as a range of values. */
-export function Span({ series, tone = 'muted', label, ...band }: SpanProps) {
+export function Span({ series, tone = 'muted', ordinal, label, ...band }: SpanProps) {
   const { x, y, width, height, clipId } = usePlot();
-  const className = `sps-span ${markClass(series, series === undefined ? tone : undefined)}`;
+  const className = `sps-span ${markClass(series, series === undefined ? tone : undefined, ordinal)}`;
   if (band.x0 !== undefined) {
     const left = Math.min(position(x, band.x0, 'x'), position(x, band.x1, 'x'));
     const right = Math.max(position(x, band.x0, 'x'), position(x, band.x1, 'x'));
@@ -183,6 +189,8 @@ export interface MarkerProps {
   x: number;
   y: number;
   series?: number;
+  /** Step in an ordinal ramp (1-8), for a series with an order. Not with `series`. */
+  ordinal?: number;
   tone?: MarkTone;
   label?: ReactNode;
   labelPosition?: LabelPosition;
@@ -192,13 +200,13 @@ export interface MarkerProps {
 }
 
 /** A point mark with a ring in the surface color, so it stays legible on top of lines. */
-export function Marker({ x: xValue, y: yValue, series, tone, label, labelPosition = 'above', labelOffset, hollow = false }: MarkerProps) {
+export function Marker({ x: xValue, y: yValue, series, tone, ordinal, label, labelPosition = 'above', labelOffset, hollow = false }: MarkerProps) {
   const { x, y } = usePlot();
   const px = position(x, xValue, 'x');
   const py = position(y, yValue, 'y');
   return (
     <g>
-      <circle className={`sps-marker ${markClass(series, tone)}${hollow ? ' sps-marker--hollow' : ''}`} cx={px} cy={py} />
+      <circle className={`sps-marker ${markClass(series, tone, ordinal)}${hollow ? ' sps-marker--hollow' : ''}`} cx={px} cy={py} />
       {label !== undefined && (
         <MarkLabel x={px} y={py} position={labelPosition} offset={labelOffset}>
           {label}
@@ -237,6 +245,8 @@ export interface BarProps {
   /** Bar thickness in slide pixels. */
   thickness?: number;
   series?: number;
+  /** Step in an ordinal ramp (1-8), for a series with an order. Not with `series`. */
+  ordinal?: number;
   tone?: MarkTone;
   /** A range around the value, such as min–max over runs, drawn as a whisker. */
   range?: [low: number, high: number];
@@ -245,7 +255,7 @@ export interface BarProps {
 }
 
 /** A bar from a baseline to a value, with an optional range whisker and a direct label past its end. */
-export function Bar({ orientation = 'horizontal', at, value, base = 0, thickness = 32, series, tone, range, label }: BarProps) {
+export function Bar({ orientation = 'horizontal', at, value, base = 0, thickness = 32, series, tone, ordinal, range, label }: BarProps) {
   const { x, y, xType, yType } = usePlot();
   const horizontal = orientation === 'horizontal';
   if ((horizontal ? xType : yType) === 'log') {
@@ -263,7 +273,7 @@ export function Bar({ orientation = 'horizontal', at, value, base = 0, thickness
   const endY = horizontal ? crossScale(at) : valueScale(reach);
   return (
     <g>
-      <path className={`sps-bar ${markClass(series, tone)}`} d={d} />
+      <path className={`sps-bar ${markClass(series, tone, ordinal)}`} d={d} />
       {range && <Whisker orientation={orientation} at={at} low={range[0]} high={range[1]} cap={thickness * 0.6} />}
       {label !== undefined && (
         <MarkLabel x={endX} y={endY} position={horizontal ? (grows ? 'right' : 'left') : grows ? 'above' : 'below'}>

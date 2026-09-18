@@ -4,6 +4,8 @@ import { markClass, type MarkTone } from './context.js';
 export interface LegendItem {
   label: ReactNode;
   series?: number;
+  /** Step in an ordinal ramp (1-8), matching a mark drawn with `ordinal`. */
+  ordinal?: number;
   tone?: MarkTone;
   /** Draw the key as a dashed line, matching a dashed series. */
   dashed?: boolean;
@@ -19,9 +21,9 @@ export function Legend({ items }: { items: LegendItem[] }) {
         <li key={i}>
           <svg className="sps-legend-key" width={40} height={16} aria-hidden="true">
             {item.shape === 'swatch' ? (
-              <rect className={`sps-bar ${markClass(item.series, item.tone)}`} x={8} y={0} width={24} height={16} rx={4} />
+              <rect className={`sps-bar ${markClass(item.series, item.tone, item.ordinal)}`} x={8} y={0} width={24} height={16} rx={4} />
             ) : (
-              <line className={`sps-line ${markClass(item.series, item.tone)}${item.dashed ? ' sps-line--dashed' : ''}`} x1={0} x2={40} y1={8} y2={8} />
+              <line className={`sps-line ${markClass(item.series, item.tone, item.ordinal)}${item.dashed ? ' sps-line--dashed' : ''}`} x1={0} x2={40} y1={8} y2={8} />
             )}
           </svg>
           {item.label}

@@ -319,6 +319,14 @@
 .sps-series-6 { --sps-mark: var(--sps-series-6); }
 .sps-series-7 { --sps-mark: var(--sps-series-7); }
 .sps-series-8 { --sps-mark: var(--sps-series-8); }
+.sps-ordinal-1 { --sps-mark: var(--sps-ordinal-1); }
+.sps-ordinal-2 { --sps-mark: var(--sps-ordinal-2); }
+.sps-ordinal-3 { --sps-mark: var(--sps-ordinal-3); }
+.sps-ordinal-4 { --sps-mark: var(--sps-ordinal-4); }
+.sps-ordinal-5 { --sps-mark: var(--sps-ordinal-5); }
+.sps-ordinal-6 { --sps-mark: var(--sps-ordinal-6); }
+.sps-ordinal-7 { --sps-mark: var(--sps-ordinal-7); }
+.sps-ordinal-8 { --sps-mark: var(--sps-ordinal-8); }
 .sps-tone-ink { --sps-mark: var(--sps-color-fg); }
 .sps-tone-muted { --sps-mark: var(--sps-chart-muted-mark); }
 
@@ -396,6 +404,19 @@
 .sps-mark-label {
   font-size: var(--sps-text-chart);
   fill: var(--sps-color-fg);
+}
+
+/* A chart and its legend: one unit, spaced as the parts of a figure are. */
+.sps-chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sps-figure-gap);
+  align-items: start;
+  min-width: 0;
+}
+
+.reveal .sps-chart > * + * {
+  margin-top: 0;
 }
 
 .sps-legend {
