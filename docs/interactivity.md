@@ -10,9 +10,13 @@ after it is designed from what that taught us rather than from this document.
 
 ## Where the slide numbers come from
 
-Every slide number below belongs to the **staged-introduction talk**, a deck built with this
-library over in the psy-research project. It is not the example deck in this repository, and it
-is not a dependency: the library has to keep working without it, and nothing here may require it.
+Every slide number below belongs to a **staged-introduction talk**, a deck built with this library
+from a psychology research project. It is not the example deck in this repository, and the library
+does not depend on it: nothing here may make the library need that deck to build or to pass.
+
+Each slide is named as well as numbered, because the numbers belong to a document this repository
+does not control. The static version of that deck is finished, so they should hold; the names are
+what survives if it ever grows a slide in the middle.
 
 It earns its place in this plan because it is the only thing that has asked for any of this.
 Fourteen of its slides are waiting on capabilities the library does not have — live models,
@@ -114,8 +118,13 @@ not the mechanism the deck's correctness depends on.
 
 ## The steps
 
-Each is gated on `npm run build && npm test && npm run lint && npm run verify` staying green, on
-the example deck **and** on the staged-introduction deck, plus a look at the screenshots.
+Each is gated on `npm run build && npm test && npm run lint && npm run verify` staying green on
+the example deck in this repository, plus a look at the screenshots.
+
+The talk is gated too, but it is checked where it lives, because the library cannot depend on it.
+A step is not finished until its checks pass there as well, and a failure on the talk stops the
+next step exactly as a failure here does. The difference is where the command runs, not whether
+it counts.
 
 ### 0. This document
 
@@ -123,8 +132,8 @@ Agree the contract and the layering before writing the API.
 
 ### 1. Spike: the clock, on one slide
 
-**Slide 17's playhead** — a precomputed replay, so the timeline is tested without the compute
-problem confusing the result.
+**The gap chart (17), and a playhead over it** — a precomputed replay, so the timeline is tested
+without the compute problem confusing the result.
 
 The real unknowns, in the order they can bite:
 
@@ -139,12 +148,13 @@ survives contact.
 ### 2. The timeline primitive
 
 Generalize the spike into the library: the position/source split, `hold`, and the replay source.
-Migrate the data-replay slides (12, 17, 19, 21, 23, 30, 32), which are the largest group and the
-least risky.
+Migrate the seven data-replay slides (12, 17, 19, 21, 23, 30, 32), which are the largest group and
+the least risky.
 
 ### 3. Spike: a live model
 
-**Slide 26** — two networks training side by side. The biggest unknown in the whole plan.
+**The linear-network slide (26)** — two networks training side by side. The biggest unknown in
+the whole plan.
 
 - Chunked compute that does not block the render, and does not depend on frame timing for its
   results.
@@ -159,9 +169,9 @@ Generalize, and migrate the live-simulation slides (7, 8, 10, 26).
 
 ### 5. Spike: direct manipulation
 
-**Slide 11's draggable S-curve.** Different in kind: no time axis, so it tests whether the
-contract holds for state that comes from a gesture. A control value is a position like any
-other, and it needs a declared default that print and the verifier see.
+**The nonlinear-network slide (11), and its draggable S-curve.** Different in kind: no time axis,
+so it tests whether the contract holds for state that comes from a gesture. A control value is a
+position like any other, and it needs a declared default that print and the verifier see.
 
 ### 6. Controls, and the rest of the deck
 
@@ -182,8 +192,8 @@ and a claim in a comment does not.
 
 ## What must not break
 
-- **The static alternative.** Every dynamic visual in the staged-introduction deck already has a
-  designed static figure, and those serve the PDF and a failed laptop. Interactivity is
+- **The static alternative.** Every dynamic visual in the talk already has a designed static
+  figure, and those serve the PDF and a failed laptop. Interactivity is
   additive. Where the held frame says the same thing as the designed figure, the figure can
   retire; where the designed figure is a genuinely different composition, both stay and the
   slide declares which one print gets.
@@ -206,6 +216,6 @@ and a claim in a comment does not.
 
 Steps 1–2 are worth doing regardless: they pay for themselves across seven slides and carry the
 least risk. Step 3 is the one that could prove expensive, and it is worth knowing before starting
-it that the static alternative for slide 26 already works. If the live version turns out to cost
+it that the linear-network slide's static alternative already works. If the live version costs
 more than it teaches, stopping after step 2 leaves the deck better than it is now and the library
 with a timeline it can use.
