@@ -112,6 +112,10 @@ export async function measureSlide({ index, step, tolerance }: MeasureArgs): Pro
     missingCitations: [...section.querySelectorAll('[data-citation-missing]')].flatMap((el) =>
       (el.getAttribute('data-citation-missing') ?? '').split(' ').filter(Boolean),
     ),
+    citations: [...section.querySelectorAll('[data-citation]')].flatMap((el) =>
+      (el.getAttribute('data-citation') ?? '').split(' ').filter(Boolean),
+    ),
+    references: [...section.querySelectorAll('[data-reference]')].map((el) => el.getAttribute('data-reference') ?? ''),
     overflow,
     overflowCount: overflow.length,
     labelOverlaps,

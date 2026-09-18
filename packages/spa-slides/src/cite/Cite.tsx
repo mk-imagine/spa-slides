@@ -4,6 +4,12 @@ import bibliography from 'virtual:spa-slides/bibliography';
 /** Attribute the verifier looks for to report citations that did not resolve. */
 export const MISSING_CITATION_ATTRIBUTE = 'data-citation-missing';
 
+/** Attribute carrying the keys a citation cites, so the verifier can find references nothing cites. */
+export const CITATION_ATTRIBUTE = 'data-citation';
+
+/** Attribute carrying the key of one entry in a reference list. */
+export const REFERENCE_ATTRIBUTE = 'data-reference';
+
 export interface CiteProps {
   /** One citation key, or several cited together. */
   id: string | string[];
@@ -34,7 +40,11 @@ export function Cite({ id, narrative = false }: CiteProps) {
   const text = narrative
     ? entries.map((e) => e.narrative).join('; ')
     : `(${entries.map((e) => e.inText).join('; ')})`;
-  return <span className="sps-cite">{text}</span>;
+  return (
+    <span className="sps-cite" {...{ [CITATION_ATTRIBUTE]: ids.join(' ') }}>
+      {text}
+    </span>
+  );
 }
 
 export interface ReferencesProps {
@@ -52,7 +62,7 @@ export function References({ ids }: ReferencesProps) {
     <ul className="sps-references">
       {entries.map(({ key, entry }) =>
         entry ? (
-          <li key={key} dangerouslySetInnerHTML={{ __html: entry.reference }} />
+          <li key={key} {...{ [REFERENCE_ATTRIBUTE]: key }} dangerouslySetInnerHTML={{ __html: entry.reference }} />
         ) : (
           <li key={key} className="sps-cite--missing" {...{ [MISSING_CITATION_ATTRIBUTE]: key }}>
             [?{key}]

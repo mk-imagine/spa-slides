@@ -14,4 +14,5 @@ export { MonoBlock, type MonoBlockProps } from './layout/MonoBlock.js';
 export { Text, type TextProps } from './layout/Text.js';
 export type { ImageAsset } from './assets.js';
 export { Cite, References, type CiteProps, type ReferencesProps } from './cite/Cite.js';
+export { ReferencesSlide, type ReferencesSlideProps } from './cite/ReferencesSlide.js';
 export type { BibEntry, Bibliography } from './cite/types.js';

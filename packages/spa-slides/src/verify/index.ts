@@ -130,6 +130,20 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
       detail: unresolved.map((s) => ({ slide: s.slide, keys: s.missingCitations })),
     });
 
+    // A reference list is meant to be what the deck cites. An entry nothing cites is a leftover in
+    // the bibliography, and it is invisible on the slide: it looks exactly like a real reference.
+    const cited = new Set(slides.flatMap((s) => s.citations));
+    const listed = [...new Set(slides.flatMap((s) => s.references))].sort();
+    const uncited = listed.filter((key) => !cited.has(key));
+    if (listed.length > 0) {
+      record({
+        id: 'references-cited',
+        name: 'every reference listed is cited',
+        pass: uncited.length === 0,
+        detail: { uncited, listed: listed.length, cited: cited.size },
+      });
+    }
+
     const colliding = slides.filter((s) => s.labelOverlaps.length > 0);
     record({
       id: 'label-overlap',

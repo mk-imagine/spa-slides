@@ -53,6 +53,16 @@ describe('verifyDeck on a deck with one deliberate failure per slide', () => {
     expect(check('citations').detail).toEqual([{ slide: 6, keys: ['nonexistent2020'] }]);
   });
 
+  it('flags a reference the deck lists but never cites, and not the ones it cites', () => {
+    expect(check('references-cited').pass).toBe(false);
+    expect(check('references-cited').detail).toMatchObject({ uncited: ['uncited1999'] });
+  });
+
+  it('records the keys each slide cites, ignoring one that did not resolve', () => {
+    expect(result.slides[0]!.citations).toEqual(['rogers2004', 'saxe2019']);
+    expect(result.slides[5]!.citations).toEqual([]);
+  });
+
   it('flags the unbundled font by family and slide', () => {
     expect(check('fonts').pass).toBe(false);
     expect(check('fonts').detail).toEqual([{ family: 'Georgia', slides: [6] }]);
