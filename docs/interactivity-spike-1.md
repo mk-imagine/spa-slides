@@ -46,9 +46,10 @@ One caveat the design accepts rather than solves: the two windows run their own 
 agree *at* keyframes and can differ mid-glide. That is the right trade, but it should be said out
 loud.
 
-Not confirmed: whether the speaker view's own preview renders the identical frame. Its iframes
-are an opaque origin under `file://`, so the probe could not read into them. Confirming that
-needs the deck served over http.
+The speaker view's own preview frames could not be read under `file://`, where they are an opaque
+origin. Served over http they are same-origin and readable, and a later probe confirmed they hold
+the same state as the audience window. **Any probe that needs to see inside the speaker view has
+to serve the deck over http**; under `file://` the question cannot be asked at all.
 
 ### Does `?print-pdf` freeze?
 
