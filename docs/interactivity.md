@@ -69,7 +69,8 @@ Every interactive slide, whatever it does, exposes state that is:
    it. Not `advance()` — `at(p)`.
 2. **Deterministic.** The same *p* and the same seed give the same state, on any machine, with no
    dependence on wall-clock time or on how long the presenter lingered.
-3. **Held.** The slide declares the position the PDF and the verifier should see.
+3. **Backed by a still.** The slide authors a static version, and that is what print and the
+   verifier render.
 
 Addressability is the load-bearing one, and it is worth being stubborn about. If state can only
 be reached by playing forward, then print has to simulate, the verifier has to simulate,
@@ -79,7 +80,14 @@ as counting visible fragments: derive the state from a position, never accumulat
 
 This is why a **data replay and a live simulation should look identical from the outside**. One
 reads `frames[i]`; the other computes and memoizes. The timeline should not be able to tell them
-apart, and neither should print.
+apart.
+
+The third clause used to say the slide declares a position to freeze at, and print renders that.
+[Spike 2](interactivity-spike-2.md) retired it: for the slides this is being built for, no frame
+of the animation is the right still. One talk slide's static version puts two finished curves
+beside a table of final outputs — a comparison that exists in no frame of the live version, and
+that no freeze can produce. The still is a separate, authored thing, and making it mandatory is
+free, because every slide in question is static today.
 
 ## The layers
 
@@ -98,7 +106,10 @@ from Reveal's fragments wherever it can be, so it inherits the four-places corre
 precomputed frames, a simulation that computes lazily, and a script (keyframes plus easing).
 
 **Controls.** Play/pause, scrub, reset, and direct manipulation. Presenter-facing, transient,
-and explicitly *not* part of what print or the verifier sees — except through the declared hold.
+and never seen by print or the verifier, which render the still instead.
+
+**The still.** What print, the verifier, reduced-motion and a failed interactive version all get.
+Authored beside the live one rather than captured from it.
 
 **Marks.** The existing chart primitives. They already take data and draw it; nothing here
 changes them.
@@ -186,10 +197,10 @@ by this point. If they do not, the primitives are wrong.
 
 The checks that stop this decaying:
 
-- Every slide with an interactive source declares a `hold`.
-- The PDF page for such a slide matches its held state, so a frozen slide cannot silently print
-  mid-animation.
-- No slide is still animating when the verifier screenshots it.
+- Every interactive slide authors a still, and the PDF contains the still, not a frame.
+- The interactive version is checked too, in its own pass, so it cannot overflow, collide labels
+  or render blank while the checks look at its twin.
+- A slide showing its still because the interactive version threw is a failure, not a pass.
 
 By the same reasoning as the `references-cited` check: a claim the tooling enforces stays true,
 and a claim in a comment does not.
@@ -197,10 +208,9 @@ and a claim in a comment does not.
 ## What must not break
 
 - **The static alternative.** Every dynamic visual in the talk already has a designed static
-  figure, and those serve the PDF and a failed laptop. Interactivity is
-  additive. Where the held frame says the same thing as the designed figure, the figure can
-  retire; where the designed figure is a genuinely different composition, both stay and the
-  slide declares which one print gets.
+  figure, and those serve the PDF and a failed laptop. They do not retire: they become the
+  required still, and the interactive version is added beside them. That is what makes this
+  additive — no step of this plan can leave the printed deck worse than it is now.
 - **`--expect-slides`.** Interactivity must not change the slide count.
 - **Determinism.** Seeds are pinned and checked in, as the talk's seed-finding script already
   does for its toy network.
@@ -214,7 +224,9 @@ and a claim in a comment does not.
 | Does the verifier need a hold hook, or can it drive steps as it already does? | Spike 1 |
 | Main thread or worker for a live model? | Spike 3 |
 | Does a gesture-driven control fit the same contract as a timeline? | Spike 5 |
-| Do held frames let the hand-built static alternatives retire? | Step 2, per slide |
+| Does the static/interactive override need to cross windows? | Spike 2, still open |
+| What key toggles the still, and is it safe in the speaker view? | Spike 2, still open |
+| How is drift between the two versions caught? | Open |
 
 ## Cost, honestly
 
