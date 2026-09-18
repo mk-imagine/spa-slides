@@ -100,9 +100,9 @@ index — is deterministic, and both windows land on the still. The exposure is 
 *not* deterministic, which is the same class of bug that makes a slide flaky anyway.
 
 The key toggle is the genuine gap. If a presenter hits it because something looks wrong on the
-projector, their speaker view will not follow. Either it rides on something Reveal already
-mirrors, or the speaker view is told separately, and that should be settled before the key is
-offered to anyone.
+projector, their speaker view will not follow. **Settled in [spike 3](interactivity-spike-3.md):**
+a BroadcastChannel carries it, and it reaches other windows even from `file://`, where an opaque
+origin suggests it should not.
 
 **The key is provisional.** `t` is free of Reveal's own bindings, but was not tested inside the
 speaker view, and must not be something a presenter's clicker emits.
@@ -112,7 +112,9 @@ the interactive version is never exercised, and could overflow, collide labels o
 with every check passing. The verifier needs two passes over an interactive slide: the fallback
 for the canonical screenshot and the PDF, and the interactive version for the structural checks.
 
-**Drift is unsolved.** Two authored artifacts can come to say different things and no tool can
-check that they agree. The fallback should at least derive from the same data and seed, so they
-cannot disagree about numbers; showing both side by side in the contact sheet would make the rest
-visible.
+**Drift is partly checkable.** Two authored artifacts can come to say different things, and no
+tool can judge whether two *figures* mean the same. The slide's prose is another matter, and it is
+the part that must not drift. [Spike 3](interactivity-spike-3.md) shows the library's own
+structure draws the boundary: strip the figures from a slide's body and what remains is the claim
+it makes. The fallback should still derive from the same data and seed, so the two cannot disagree
+about numbers.
