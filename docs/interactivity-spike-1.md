@@ -95,6 +95,14 @@ Related, and already known from the verifier's own source: navigating **backward
 shows all of its fragments, so resetting to step 0 means entering from before the slide, not
 returning to it.
 
+## Superseded, in part
+
+The conclusion above — one frozen condition, every timeline snapping to its target — was the right
+read of the evidence but the wrong fix. [Spike 2](interactivity-spike-2.md) replaced it: a frozen
+frame is often not a figure anyone would author, so print and the verifier render a separately
+authored still instead. The environment still decides, and the list of conditions is the same one;
+what changes is what they switch *to*.
+
 ## Where step 2 starts
 
 The design survives, so the timeline primitive is worth building. It should land with the frozen
