@@ -20,10 +20,19 @@ export interface DeckProps {
   meta: DeckMeta;
   transition?: Transition;
   slideNumbers?: boolean;
+  /**
+   * Reveal's on-screen back and forward arrows. Default: true. A presenter driving from a clicker
+   * or the arrow keys never uses them, and the audience sees them on every slide, so a deck being
+   * projected can turn them off and leave the slide face to its content.
+   */
+  controls?: boolean;
   children: ReactNode;
 }
 
 const PLUGINS = [RevealNotes];
+
+/** Set on <html> when the deck hides Reveal's nav arrows, so the slide number can take the corner. */
+export const NO_CONTROLS_CLASS = 'sps-no-controls';
 
 const DeckMetaContext = createContext<DeckMeta | null>(null);
 
@@ -33,10 +42,18 @@ export function useDeckMeta(): DeckMeta {
   return meta;
 }
 
-export function Deck({ meta, transition = 'fade', slideNumbers = true, children }: DeckProps) {
+export function Deck({ meta, transition = 'fade', slideNumbers = true, controls = true, children }: DeckProps) {
   useEffect(() => {
     document.title = meta.title;
   }, [meta.title]);
+
+  // The slide number is offset to clear the nav arrows. With the arrows off there is nothing to
+  // clear, and Reveal leaves their box behind at zero size, so the stylesheet cannot tell on its
+  // own; this says which case the deck is in.
+  useEffect(() => {
+    document.documentElement.classList.toggle(NO_CONTROLS_CLASS, !controls);
+    return () => document.documentElement.classList.remove(NO_CONTROLS_CLASS);
+  }, [controls]);
 
   return (
     <DeckMetaContext.Provider value={meta}>
@@ -48,7 +65,7 @@ export function Deck({ meta, transition = 'fade', slideNumbers = true, children 
           // Slides own their vertical layout (title pinned to the top), so Reveal must not center them.
           center: false,
           hash: true,
-          controls: true,
+          controls,
           progress: true,
           slideNumber: slideNumbers ? 'c/t' : false,
           transition,

@@ -11,6 +11,9 @@
   --sps-text-section: 40px;
   --sps-text-small: 32px;
   --sps-text-caption: 26px;
+  /* Chrome, not content: the slide number is for the presenter and for anyone counting along, and
+     should not compete with the slide. */
+  --sps-text-slide-number: 12px;
   --sps-leading: 1.4;
   --sps-weight-strong: 650;
 

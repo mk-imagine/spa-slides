@@ -32,6 +32,25 @@ html.reveal-print .sps-root {
   color: var(--sps-color-accent);
 }
 
+/* Reveal anchors the nav controls and the slide number to the same corner, so the right arrow
+   lands on top of the number. The controls are a fixed size and the number grows leftwards as the
+   deck gets longer, so it is the number that moves clear, and it stays clear at any slide count.
+   Both keep to the bottom band, where the progress bar already is. */
+.reveal .slide-number {
+  right: 112px;
+  bottom: 34px;
+  background: none;
+  font-family: var(--sps-font-body);
+  font-size: var(--sps-text-slide-number);
+  color: var(--sps-color-muted);
+}
+
+/* With the arrows hidden there is nothing to clear, so the number takes the corner itself. */
+.sps-no-controls .reveal .slide-number {
+  right: 24px;
+  bottom: 24px;
+}
+
 .reveal .slides {
   text-align: left;
 }
