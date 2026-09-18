@@ -224,9 +224,10 @@ and a claim in a comment does not.
 | Does the verifier need a hold hook, or can it drive steps as it already does? | Spike 1 |
 | Main thread or worker for a live model? | Spike 3 |
 | Does a gesture-driven control fit the same contract as a timeline? | Spike 5 |
-| Does the static/interactive override need to cross windows? | Spike 2, still open |
-| What key toggles the still, and is it safe in the speaker view? | Spike 2, still open |
-| How is drift between the two versions caught? | Open |
+| Does the static/interactive override cross windows? | Spike 3: yes, on a BroadcastChannel, even from disk |
+| How is drift between the two versions caught? | Spike 3: prose equality, figures excluded |
+| What key toggles the still, and is it safe in the speaker view? | Open |
+| Does the toggle work outside Chromium? | Open |
 
 ## Cost, honestly
 
