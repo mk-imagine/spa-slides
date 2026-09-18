@@ -9,6 +9,13 @@ async function lint(code: string, filePath = 'src/slides/Example.tsx') {
   return result!.messages.map((m) => m.ruleId);
 }
 
+/** The file as the rules would rewrite it. */
+async function fix(code: string, filePath = 'src/slides/Example.tsx') {
+  const eslint = new ESLint({ cwd: tmpdir(), overrideConfigFile: true, overrideConfig: spaSlidesLint(), fix: true });
+  const [result] = await eslint.lintText(code, { filePath });
+  return result!.output ?? code;
+}
+
 describe('spa-slides/no-inline-style', () => {
   it('rejects a style attribute', async () => {
     expect(await lint('export const A = () => <p style={{ fontSize: 13 }}>x</p>;')).toEqual(['spa-slides/no-inline-style']);
@@ -62,5 +69,23 @@ describe('spaSlidesLint', () => {
   it('only applies to the configured files', async () => {
     // Outside `files`, ESLint reports only that no configuration matched (a message with no rule).
     expect(await lint('export const A = () => <p style={{}} />;', 'scripts/tool.tsx')).toEqual([null]);
+  });
+});
+
+describe('spa-slides/american-spelling', () => {
+  it('rejects a British spelling in slide text, and fixes it', async () => {
+    const code = 'export const A = () => <p>The colour rows</p>;';
+    expect(await lint(code)).toEqual(['spa-slides/american-spelling']);
+    expect(await fix(code)).toContain('The color rows');
+  });
+
+  it('catches comments, identifiers and inflections, keeping the case', async () => {
+    const code = '/** Grey, normalised. */\nexport const tintColours = ["labelled"];';
+    expect(await lint(code)).toEqual(Array(4).fill('spa-slides/american-spelling'));
+    expect(await fix(code)).toBe('/** Gray, normalized. */\nexport const tintColors = ["labeled"];');
+  });
+
+  it('leaves American spellings and lookalikes alone', async () => {
+    expect(await lint('export const A = () => <p>The color analysis was precise; otherwise we revise.</p>;')).toEqual([]);
   });
 });

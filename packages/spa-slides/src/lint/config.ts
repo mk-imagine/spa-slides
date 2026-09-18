@@ -30,6 +30,7 @@ export function spaSlidesLint({ files = ['src/**/*.{js,jsx,ts,tsx}'] }: LintOpti
       rules: {
         'spa-slides/no-inline-style': 'error',
         'spa-slides/no-raw-color': 'error',
+        'spa-slides/american-spelling': 'error',
       },
     },
   ];
