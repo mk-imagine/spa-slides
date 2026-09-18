@@ -8,6 +8,7 @@ Presentation slides as React single-page apps: the flexibility and interactivity
 | `examples/git-workshop/` | A 35-slide static deck, ported from a Beamer workshop, that exercises the library |
 | `docker/run.sh` | Runs any command in the pinned Node + Playwright container |
 | `spike/` | The throwaway spike that chose the stack. Findings in [spike/SPIKE.md](spike/SPIKE.md) |
+| `docs/` | Design notes and plans. Interactivity: [docs/interactivity.md](docs/interactivity.md) |
 
 ## Working on it
 
