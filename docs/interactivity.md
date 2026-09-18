@@ -145,6 +145,10 @@ The real unknowns, in the order they can bite:
 Throwaway code. The output is answers, and a decision on whether the step-as-skeleton design
 survives contact.
 
+**Done.** The design survives; the verifier does not. See
+[the findings](interactivity-spike-1.md), which move the freeze out of each slide and into the
+library, where print, the verifier and reduced-motion are one condition rather than three.
+
 ### 2. The timeline primitive
 
 Generalize the spike into the library: the position/source split, `hold`, and the replay source.
