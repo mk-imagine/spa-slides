@@ -45,6 +45,8 @@ So: BroadcastChannel, with the `storage` event as a fallback for anywhere it is 
 Chromium only. Firefox and Safari were not tested, and this is exactly the kind of behavior that
 differs between them. The verifier runs Chromium and a presenter chooses their own browser, so it
 is worth checking before the key is documented as reliable.
+**Settled in [spike 4](interactivity-spike-4.md):** Firefox delivers both channels from disk too;
+WebKit delivers them over http, and from disk only from the speaker view to the audience window.
 
 The speaker view's preview frames also cannot be *read* from a `file://` page, so a probe cannot
 confirm they received the toggle — only that the mechanism reaches other documents of the same

@@ -132,6 +132,9 @@ not the mechanism the deck's correctness depends on.
 Each is gated on `npm run build && npm test && npm run lint && npm run verify` staying green on
 the example deck in this repository, plus a look at the screenshots.
 
+Spikes are numbered in the order they run, not by the step that asks for them: step 1 took three,
+and step 2 one more. The spikes still ahead are named for what they test.
+
 The talk is gated too, but it is checked where it lives, because the library cannot depend on it.
 A step is not finished until its checks pass there as well, and a failure on the talk stops the
 next step exactly as a failure here does. The difference is where the command runs, not whether
@@ -166,7 +169,33 @@ Generalize the spike into the library: the position/source split, `hold`, and th
 Migrate the seven data-replay slides (12, 17, 19, 21, 23, 30, 32), which are the largest group and
 the least risky.
 
+**The library half is done.** What landed, and what it changed:
+
+- `<Interactive still>` switches a figure between its authored still and its live version, and
+  says which and why on the page. The still is a required prop, so a slide cannot have one without
+  the other.
+- `useTimeline(keyframes)` is the position: one keyframe per step, a glide forward one step,
+  landing at once otherwise and whenever motion is not allowed. There is no separate `hold`: a
+  keyframe is where the timeline holds. It runs only inside a live version, so anything that moves
+  has a still.
+- `replay(frames)` and `trace(points)` are the first sources. Neither the timeline nor a mark can
+  tell them apart from a simulation, which is the point.
+- `t` switches the slide on screen in every window. [Spike 4](interactivity-spike-4.md) found how
+  it has to be bound to work from the speaker view, and how far it reaches outside Chromium.
+- The verifier measures slides with interactive figures twice: with their stills, which the
+  screenshots and the PDF use, and live, for the same layout checks. It fails a live version that
+  threw, a PDF that shows a live version, and text that differs between the two.
+
+The verifier also had a race that animation would have exposed: it waited for Reveal to mark a
+step's fragments, not for React to render the step. The step engine now publishes the step it has
+rendered, and the verifier waits for both.
+
+The step finishes when the seven slides are migrated and pass the talk's gate, in the talk's own
+repository.
+
 ### 3. Spike: a live model
+
+*The live-model spike.*
 
 **The linear-network slide (26)** — two networks training side by side. The biggest unknown in
 the whole plan.
@@ -183,6 +212,8 @@ the whole plan.
 Generalize, and migrate the live-simulation slides (7, 8, 10, 26).
 
 ### 5. Spike: direct manipulation
+
+*The direct-manipulation spike.*
 
 **The nonlinear-network slide (11), and its draggable S-curve.** Different in kind: no time axis,
 so it tests whether the contract holds for state that comes from a gesture. A control value is a
@@ -205,6 +236,10 @@ The checks that stop this decaying:
 By the same reasoning as the `references-cited` check: a claim the tooling enforces stays true,
 and a claim in a comment does not.
 
+**Done in step 2.** Spikes 1 to 3 showed that a timeline without these checks quietly degrades the
+gate meant to catch it, so they landed with the timeline rather than after it. Steps 3 to 6 add
+sources and controls, and each should leave these checks passing rather than add to them.
+
 ## What must not break
 
 - **The static alternative.** Every dynamic visual in the talk already has a designed static
@@ -219,15 +254,15 @@ and a claim in a comment does not.
 
 | Question | Settled by |
 |---|---|
-| Which key plays and pauses without fighting Reveal? | Spike 1 |
-| Does the speaker view need its own sync channel, or do fragments suffice? | Spike 1 |
-| Does the verifier need a hold hook, or can it drive steps as it already does? | Spike 1 |
-| Main thread or worker for a live model? | Spike 3 |
-| Does a gesture-driven control fit the same contract as a timeline? | Spike 5 |
+| Which key plays and pauses without fighting Reveal? | Spike 1: mostly moot, since the clicker advances keyframes |
+| Does the speaker view need its own sync channel, or do fragments suffice? | Spike 1: fragments suffice |
+| Does the verifier need a hold hook, or can it drive steps as it already does? | Spike 1, then step 2: it drives steps, and timelines land on keyframes when it announces itself |
+| Main thread or worker for a live model? | Open: the live-model spike (step 3) |
+| Does a gesture-driven control fit the same contract as a timeline? | Open: the direct-manipulation spike (step 5) |
 | Does the static/interactive override cross windows? | Spike 3: yes, on a BroadcastChannel, even from disk |
 | How is drift between the two versions caught? | Spike 3: prose equality, figures excluded |
-| What key toggles the still, and is it safe in the speaker view? | Open |
-| Does the toggle work outside Chromium? | Open |
+| What key toggles the still, and is it safe in the speaker view? | Spike 4: `t`, bound through Reveal; it navigates nothing |
+| Does the toggle work outside Chromium? | Spike 4: Firefox yes; WebKit over http, and from disk only from the speaker view |
 
 ## Cost, honestly
 
