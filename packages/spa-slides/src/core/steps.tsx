@@ -49,7 +49,9 @@ export function StepProvider({ count, children }: { count: number; children: Rea
   return (
     <StepContext.Provider value={{ step, count }}>
       {count > 0 && (
-        <span ref={markers} className="sps-step-markers" aria-hidden="true">
+        // data-step is the step React has rendered, which lags the markers Reveal has shown. The
+        // verifier waits for both, so it never measures a slide that has not caught up.
+        <span ref={markers} className="sps-step-markers" aria-hidden="true" data-step={step}>
           {Array.from({ length: count }, (_, i) => (
             <span key={i} className={`fragment ${STEP_MARKER_CLASS}`} data-fragment-index={i} />
           ))}

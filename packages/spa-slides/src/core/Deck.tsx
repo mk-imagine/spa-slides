@@ -1,6 +1,10 @@
-import { createContext, useContext, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Deck as RevealDeck } from '@revealjs/react';
+import type { RevealApi } from 'reveal.js';
 import RevealNotes from 'reveal.js/plugin/notes';
+import { readEnvironment } from '../interactive/environment.js';
+import { InteractiveContext } from '../interactive/Interactive.js';
+import { TOGGLE_KEY, ToggleStore } from '../interactive/toggle.js';
 import { SLIDE_HEIGHT, SLIDE_WIDTH } from './size.js';
 
 export { SLIDE_HEIGHT, SLIDE_WIDTH } from './size.js';
@@ -47,6 +51,9 @@ export function Deck({ meta, transition = 'fade', slideNumbers = true, controls 
     document.title = meta.title;
   }, [meta.title]);
 
+  const [interactive] = useState(() => ({ environment: readEnvironment(), store: new ToggleStore(`sps-still:${meta.title}`) }));
+  useEffect(() => interactive.store.connect(), [interactive]);
+
   // The slide number is offset to clear the nav arrows. With the arrows off there is nothing to
   // clear, and Reveal leaves their box behind at zero size, so the stylesheet cannot tell on its
   // own; this says which case the deck is in.
@@ -57,26 +64,31 @@ export function Deck({ meta, transition = 'fade', slideNumbers = true, controls 
 
   return (
     <DeckMetaContext.Provider value={meta}>
-      <RevealDeck
-        config={{
-          width: SLIDE_WIDTH,
-          height: SLIDE_HEIGHT,
-          margin: 0.04,
-          // Slides own their vertical layout (title pinned to the top), so Reveal must not center them.
-          center: false,
-          hash: true,
-          controls,
-          progress: true,
-          slideNumber: slideNumbers ? 'c/t' : false,
-          transition,
-          pdfSeparateFragments: false,
-          // One page per slide. An overfull slide is a layout bug for the verifier to catch, not extra pages.
-          pdfMaxPagesPerSlide: 1,
-        }}
-        plugins={PLUGINS}
-      >
-        {children}
-      </RevealDeck>
+      <InteractiveContext.Provider value={interactive}>
+        <RevealDeck
+          config={{
+            width: SLIDE_WIDTH,
+            height: SLIDE_HEIGHT,
+            margin: 0.04,
+            // Slides own their vertical layout (title pinned to the top), so Reveal must not center them.
+            center: false,
+            hash: true,
+            controls,
+            progress: true,
+            slideNumber: slideNumbers ? 'c/t' : false,
+            transition,
+            pdfSeparateFragments: false,
+            // One page per slide. An overfull slide is a layout bug for the verifier to catch, not extra pages.
+            pdfMaxPagesPerSlide: 1,
+          }}
+          plugins={PLUGINS}
+          // Bound through Reveal rather than as a keydown listener: the speaker view forwards keys to
+          // its preview frame by calling Reveal directly, so a listener never hears them there.
+          onReady={(reveal: RevealApi) => reveal.addKeyBinding(TOGGLE_KEY, () => interactive.store.toggleCurrent())}
+        >
+          {children}
+        </RevealDeck>
+      </InteractiveContext.Provider>
     </DeckMetaContext.Provider>
   );
 }

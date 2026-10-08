@@ -4,10 +4,13 @@ import { pathToFileURL } from 'node:url';
 import { chromium, type Page } from 'playwright';
 import { SLIDE_HEIGHT, SLIDE_WIDTH } from '../core/size.js';
 import { STEP_MARKER_CLASS } from '../core/step-marker.js';
+import { VERIFY_PARAM } from '../interactive/environment.js';
+import { INTERACTIVE_ATTRIBUTE } from '../interactive/toggle.js';
 import { renderContactSheet } from './contact-sheet.js';
 import { measureSlide } from './measure.js';
 import { mergeStepReports } from './merge.js';
 import { countPdfPages } from './pdf.js';
+import { proseDifference } from './prose.js';
 import type { Check, SlideReport, VerifyOptions, VerifyResult } from './types.js';
 
 export type { Check, CheckId, Overflow, SlideReport, VerifyOptions, VerifyResult } from './types.js';
@@ -17,14 +20,18 @@ const TOLERANCE_PX = 1.5;
 const TIMEOUT_MS = 20_000;
 const VIEWPORT = { width: SLIDE_WIDTH, height: SLIDE_HEIGHT };
 
-/** Shows slide `index` at build step `step` (0 is the slide on arrival). */
+/**
+ * Shows slide `index` at build step `step` (0 is the slide on arrival), once the slide has rendered
+ * that step: Reveal marks the step's fragments first, and React renders the step after.
+ */
 async function showSlide(page: Page, index: number, step = 0) {
   // Reveal's URL is #/slide/vertical/fragment, where fragment -1 means none shown yet.
   await page.evaluate(({ i, fragment }) => (location.hash = `#/${i}/0/${fragment}`), { i: index, fragment: step - 1 });
   await page.waitForFunction(
     ({ selector, marker, i, s }) => {
       const section = document.querySelectorAll(selector)[i];
-      return section?.classList.contains('present') && section.querySelectorAll(`.${marker}.visible`).length === s;
+      const rendered = section?.querySelector('.sps-step-markers')?.getAttribute('data-step') ?? '0';
+      return section?.classList.contains('present') && section.querySelectorAll(`.${marker}.visible`).length === s && rendered === String(s);
     },
     { selector: SECTIONS, marker: STEP_MARKER_CLASS, i: index, s: step },
     { timeout: TIMEOUT_MS },
@@ -33,6 +40,17 @@ async function showSlide(page: Page, index: number, step = 0) {
 
 /** Build animations would put screenshots and measurements mid-fade. */
 const NO_TRANSITIONS = '*, *::before, *::after { transition: none !important; animation: none !important; }';
+
+/**
+ * The query for each pass. The verifier announces itself and the version it is checking, so every
+ * interactive figure shows that version, and its timeline lands on each keyframe instead of gliding.
+ */
+const passQuery = (version: 'still' | 'live') => `?transition=none&backgroundTransition=none&${VERIFY_PARAM}=${version}`;
+
+/** Each version of a slide that was measured: the slide itself, and its live version if it has one. */
+function versions(slide: SlideReport): { version?: 'still' | 'live'; report: Omit<SlideReport, 'live'> }[] {
+  return slide.live ? [{ version: 'still', report: slide }, { version: 'live', report: slide.live }] : [{ report: slide }];
+}
 
 /**
  * Opens a built deck from disk in Chromium, the way an audience would get it, and checks every slide.
@@ -46,9 +64,11 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
 
   const url = pathToFileURL(indexHtml).href;
   const slideName = (slide: number) => String(slide).padStart(2, '0');
+  /** A screenshot at one step, or at the last step when `step` is omitted. Live versions get their own. */
+  const shotPath = (version: 'still' | 'live', slide: number, step?: number) =>
+    join(outDir, 'slides', `${slideName(slide)}${version === 'live' ? '-live' : ''}${step === undefined ? '' : `-step-${step}`}.png`);
   /** The slide in its final state; used for the contact sheet. */
-  const screenshotPath = (slide: number) => join(outDir, 'slides', `${slideName(slide)}.png`);
-  const stepScreenshotPath = (slide: number, step: number) => join(outDir, 'slides', `${slideName(slide)}-step-${step}.png`);
+  const screenshotPath = (slide: number) => shotPath('still', slide);
   rmSync(outDir, { recursive: true, force: true });
   mkdirSync(join(outDir, 'slides'), { recursive: true });
 
@@ -65,14 +85,26 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
     page.on('pageerror', (e) => consoleMessages.push(`[${label}] uncaught: ${e.message}`));
   };
 
+  /** Measures one slide at every build step, screenshotting each. */
+  const measureSteps = async (page: Page, index: number, version: 'still' | 'live') => {
+    const steps = await page.locator(SECTIONS).nth(index).locator(`.${STEP_MARKER_CLASS}`).count();
+    const reports: SlideReport[] = [];
+    for (let step = 0; step <= steps; step++) {
+      await showSlide(page, index, step);
+      reports.push(await page.evaluate(measureSlide, { index, step, tolerance: TOLERANCE_PX }));
+      await page.screenshot({ path: shotPath(version, index + 1, step === steps ? undefined : step) });
+    }
+    return mergeStepReports(reports);
+  };
+
   const slides: SlideReport[] = [];
   const browser = await chromium.launch();
   try {
-    // ---- The deck as presented -------------------------------------------------------------
-    const live = await browser.newContext({ viewport: VIEWPORT });
-    const page = await live.newPage();
+    // ---- The deck as presented, with every figure's still ----------------------------------
+    const presented = await browser.newContext({ viewport: VIEWPORT });
+    const page = await presented.newPage();
     watchConsole(page, 'deck');
-    await page.goto(`${url}?transition=none&backgroundTransition=none`);
+    await page.goto(`${url}${passQuery('still')}`);
     await page.waitForSelector('.reveal.ready', { timeout: TIMEOUT_MS });
     await page.addStyleTag({ content: NO_TRANSITIONS });
 
@@ -87,52 +119,47 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
       });
     }
 
-    for (let i = 0; i < slideCount; i++) {
-      const steps = await page.locator(SECTIONS).nth(i).locator(`.${STEP_MARKER_CLASS}`).count();
-      const reports: SlideReport[] = [];
-      for (let step = 0; step <= steps; step++) {
-        await showSlide(page, i, step);
-        reports.push(await page.evaluate(measureSlide, { index: i, step, tolerance: TOLERANCE_PX }));
-        await page.screenshot({ path: step === steps ? screenshotPath(i + 1) : stepScreenshotPath(i + 1, step) });
-      }
-      slides.push(mergeStepReports(reports));
+    for (let i = 0; i < slideCount; i++) slides.push(await measureSteps(page, i, 'still'));
+
+    // ---- The live version of every interactive figure ---------------------------------------
+    // Print and the screenshots above show stills, so without this pass a live version could
+    // overflow, collide its labels or fail outright with every check passing.
+    const interactive = slides.filter((s) => s.rendered.length > 0);
+    if (interactive.length > 0) {
+      const liveContext = await browser.newContext({ viewport: VIEWPORT });
+      const livePage = await liveContext.newPage();
+      watchConsole(livePage, 'live');
+      await livePage.goto(`${url}${passQuery('live')}`);
+      await livePage.waitForSelector('.reveal.ready', { timeout: TIMEOUT_MS });
+      await livePage.addStyleTag({ content: NO_TRANSITIONS });
+      for (const slide of interactive) slide.live = await measureSteps(livePage, slide.slide - 1, 'live');
+      await liveContext.close();
     }
 
-    const overflowing = slides.filter((s) => s.overflowCount > 0);
-    record({
-      id: 'overflow',
-      name: 'no slide overflows',
-      pass: overflowing.length === 0,
-      detail: overflowing.map((s) => ({ slide: s.slide, title: s.title, worst: s.overflow.slice(0, 3) })),
-    });
+    /** Slides failing a measurement in either version, with the version named where there are two. */
+    const failing = <T,>(pick: (r: Omit<SlideReport, 'live'>) => T | undefined) =>
+      slides.flatMap((s) =>
+        versions(s).flatMap(({ version, report }) => {
+          const found = pick(report);
+          return found === undefined ? [] : [{ slide: s.slide, ...(version ? { version } : {}), ...found }];
+        }),
+      );
 
-    const broken = slides.filter((s) => s.brokenImages.length > 0);
-    record({
-      id: 'images',
-      name: 'every image loads',
-      pass: broken.length === 0,
-      detail: broken.map((s) => ({ slide: s.slide, images: s.brokenImages })),
-    });
+    const overflowing = failing((r) => (r.overflowCount > 0 ? { title: r.title, worst: r.overflow.slice(0, 3) } : undefined));
+    record({ id: 'overflow', name: 'no slide overflows', pass: overflowing.length === 0, detail: overflowing });
 
-    const placeholders = slides.filter((s) => s.placeholders.length > 0);
-    record({
-      id: 'placeholders',
-      name: 'no screenshot placeholders remain',
-      pass: placeholders.length === 0,
-      detail: placeholders.map((s) => ({ slide: s.slide, placeholders: s.placeholders })),
-    });
+    const broken = failing((r) => (r.brokenImages.length > 0 ? { images: r.brokenImages } : undefined));
+    record({ id: 'images', name: 'every image loads', pass: broken.length === 0, detail: broken });
 
-    const unresolved = slides.filter((s) => s.missingCitations.length > 0);
-    record({
-      id: 'citations',
-      name: 'every citation resolves',
-      pass: unresolved.length === 0,
-      detail: unresolved.map((s) => ({ slide: s.slide, keys: s.missingCitations })),
-    });
+    const placeholders = failing((r) => (r.placeholders.length > 0 ? { placeholders: r.placeholders } : undefined));
+    record({ id: 'placeholders', name: 'no screenshot placeholders remain', pass: placeholders.length === 0, detail: placeholders });
+
+    const unresolved = failing((r) => (r.missingCitations.length > 0 ? { keys: r.missingCitations } : undefined));
+    record({ id: 'citations', name: 'every citation resolves', pass: unresolved.length === 0, detail: unresolved });
 
     // A reference list is meant to be what the deck cites. An entry nothing cites is a leftover in
     // the bibliography, and it is invisible on the slide: it looks exactly like a real reference.
-    const cited = new Set(slides.flatMap((s) => s.citations));
+    const cited = new Set(slides.flatMap((s) => versions(s).flatMap((v) => v.report.citations)));
     const listed = [...new Set(slides.flatMap((s) => s.references))].sort();
     const uncited = listed.filter((key) => !cited.has(key));
     if (listed.length > 0) {
@@ -144,13 +171,8 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
       });
     }
 
-    const colliding = slides.filter((s) => s.labelOverlaps.length > 0);
-    record({
-      id: 'label-overlap',
-      name: 'no chart labels overlap',
-      pass: colliding.length === 0,
-      detail: colliding.map((s) => ({ slide: s.slide, title: s.title, overlaps: s.labelOverlaps.slice(0, 3) })),
-    });
+    const colliding = failing((r) => (r.labelOverlaps.length > 0 ? { title: r.title, overlaps: r.labelOverlaps.slice(0, 3) } : undefined));
+    record({ id: 'label-overlap', name: 'no chart labels overlap', pass: colliding.length === 0, detail: colliding });
 
     // A font the deck does not bundle falls back to whatever the machine has, so text wraps
     // differently on the presentation laptop than it did here.
@@ -159,7 +181,8 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
     );
     const unbundled = new Map<string, number[]>();
     for (const s of slides) {
-      for (const family of s.fonts.filter((f) => !loaded.has(f))) unbundled.set(family, [...(unbundled.get(family) ?? []), s.slide]);
+      const families = new Set(versions(s).flatMap((v) => v.report.fonts));
+      for (const family of [...families].filter((f) => !loaded.has(f))) unbundled.set(family, [...(unbundled.get(family) ?? []), s.slide]);
     }
     record({
       id: 'fonts',
@@ -171,7 +194,7 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
     const withNotes = slides.find((s) => s.notes !== '');
     if (withNotes) {
       await showSlide(page, withNotes.slide - 1, 0);
-      const [speaker] = await Promise.all([live.waitForEvent('page'), page.keyboard.press('s')]);
+      const [speaker] = await Promise.all([presented.waitForEvent('page'), page.keyboard.press('s')]);
       watchConsole(speaker, 'speaker view');
       const snippet = withNotes.notes.slice(0, 40);
       const shown = await speaker
@@ -187,7 +210,7 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
       record({ id: 'speaker-view', name: 'speaker view shows the notes', pass: shown, detail: { slide: withNotes.slide } });
       await speaker.close();
     }
-    await live.close();
+    await presented.close();
 
     // ---- The deck as a PDF -----------------------------------------------------------------
     const print = await browser.newContext({ viewport: VIEWPORT });
@@ -200,11 +223,45 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
       await document.fonts.ready;
       await Promise.all([...document.images].map((img) => img.decode().catch(() => undefined)));
     });
+    const printed = await printPage.evaluate(
+      (attribute) =>
+        [...document.querySelectorAll(`[${attribute}]`)].map((el) => ({
+          title: (el.closest('section')?.querySelector('.sps-title')?.textContent ?? '').trim(),
+          rendered: el.getAttribute(attribute) === 'live' ? 'live' : `still:${el.getAttribute('data-sps-still-reason') ?? ''}`,
+        })),
+      INTERACTIVE_ATTRIBUTE,
+    );
     const pdfPath = join(outDir, 'deck.pdf');
     await printPage.pdf({ path: pdfPath, preferCSSPageSize: true, printBackground: true });
     await print.close();
     const pdfPages = countPdfPages(readFileSync(pdfPath));
     record({ id: 'pdf-pages', name: 'PDF has one page per slide', pass: pdfPages === slideCount, detail: { pdfPages, slides: slideCount } });
+
+    if (interactive.length > 0) {
+      // The PDF and the screenshots are what a reader and a reviewer see, so both must show the
+      // authored stills. A live version here means a condition was missed, and it is printed mid-motion.
+      const unstill = [
+        ...interactive.flatMap((s) => s.rendered.filter((r) => r !== 'still:verify').map((rendered) => ({ slide: s.slide, title: s.title, where: 'screenshots', rendered }))),
+        ...printed.filter((p) => p.rendered !== 'still:print').map((p) => ({ ...p, where: 'pdf' })),
+      ];
+      record({
+        id: 'stills',
+        name: 'the PDF and the screenshots show each still',
+        pass: unstill.length === 0,
+        detail: { figures: printed.length, unstill },
+      });
+
+      // A slide showing its still because its live version threw would pass every other check here.
+      const notLive = interactive.flatMap((s) => (s.live?.rendered ?? []).filter((r) => r !== 'live').map((rendered) => ({ slide: s.slide, title: s.title, rendered })));
+      record({ id: 'live', name: 'every live version renders', pass: notLive.length === 0, detail: notLive });
+
+      // The two versions may draw different figures; the text around them has to make the same claim.
+      const drifted = interactive.flatMap((s) => {
+        const difference = proseDifference(s.prose, s.live?.prose ?? '');
+        return difference === null ? [] : [{ slide: s.slide, title: s.title, ...difference }];
+      });
+      record({ id: 'prose', name: 'each still says what its live version says', pass: drifted.length === 0, detail: drifted });
+    }
 
     await renderContactSheet(browser, slides, screenshotPath, join(outDir, 'contact-sheet.png'));
   } finally {
