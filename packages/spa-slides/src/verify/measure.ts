@@ -100,6 +100,17 @@ export async function measureSlide({ index, step, tolerance }: MeasureArgs): Pro
     }
   }
 
+  /**
+   * The slide's text without its figures: the part that has to say the same thing in a figure's
+   * still and its live version, which are free to differ in everything they draw. The library's own
+   * wrappers mark the line, so chart labels, ticks, legends and figure captions all drop out.
+   */
+  const prose = () => {
+    const copy = (section.querySelector('.sps-body') ?? section).cloneNode(true) as Element;
+    for (const figure of copy.querySelectorAll('svg, .sps-figure, .sps-chart, aside.notes')) figure.remove();
+    return (copy.textContent ?? '').replace(/\s+/g, ' ').trim();
+  };
+
   return {
     slide: index + 1,
     title: (section.querySelector('.sps-title, .sps-deck-title')?.textContent ?? '').trim(),
@@ -120,5 +131,11 @@ export async function measureSlide({ index, step, tolerance }: MeasureArgs): Pro
     overflowCount: overflow.length,
     labelOverlaps,
     fonts: [...fonts].sort(),
+    // The attributes <Interactive> writes; this function runs in the page, so it cannot import them.
+    rendered: [...section.querySelectorAll('[data-sps-interactive]')].map((el) =>
+      el.getAttribute('data-sps-interactive') === 'live' ? 'live' : `still:${el.getAttribute('data-sps-still-reason') ?? ''}`,
+    ),
+    prose: prose(),
   };
 }
+

@@ -43,6 +43,15 @@ export interface SlideReport {
   overflowCount: number;
   /** The first font family of every element that renders text, across all steps. */
   fonts: string[];
+  /**
+   * What each interactive figure on the slide rendered, across all steps: `live`, or `still:` and
+   * why, e.g. `still:verify` or `still:error`. Empty on a slide without one.
+   */
+  rendered: string[];
+  /** The slide's text with its figures removed: the claim it makes. Read at the last step. */
+  prose: string;
+  /** A slide with interactive figures, measured again with their live versions showing. */
+  live?: Omit<SlideReport, 'live'>;
 }
 
 export type CheckId =
@@ -57,6 +66,9 @@ export type CheckId =
   | 'fonts'
   | 'speaker-view'
   | 'pdf-pages'
+  | 'stills'
+  | 'live'
+  | 'prose'
   | 'console';
 
 export interface Check {

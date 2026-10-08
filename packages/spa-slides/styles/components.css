@@ -451,3 +451,11 @@
   flex: none;
   overflow: visible;
 }
+
+/* ---- Interactive figures ---------------------------------------------------------- */
+
+/* The switch between a still and a live version takes no part in layout: whichever renders sits
+   in the slide exactly as it would without it. */
+.sps-interactive {
+  display: contents;
+}

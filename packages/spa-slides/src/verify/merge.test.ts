@@ -12,10 +12,14 @@ const base: SlideReport = {
   brokenImages: [],
   placeholders: [],
   missingCitations: [],
+  citations: [],
+  references: [],
   labelOverlaps: [],
   overflow: [],
   overflowCount: 0,
   fonts: [],
+  rendered: [],
+  prose: '',
 };
 
 describe('mergeStepReports', () => {

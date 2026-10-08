@@ -78,6 +78,7 @@ See `examples/git-workshop` in this repository for a complete 35-slide deck.
 | `<Screenshot placeholder="…">` | A labeled box for a capture you have not taken yet. The verifier fails until it is replaced |
 | `<MonoBlock align size>` | Verbatim monospace lines: file listings, terminal output |
 | `<Text as size tone align italic>` | Typed text variants, so slides never need ad-hoc sizes or colors |
+| `<Interactive still>` | A figure with a live version and an authored still. See [Interactive figures](#interactive-figures) |
 
 Plain HTML (`p`, `ul`, `ol`, `dl`, `code`, `strong`, `em`, `table`) is styled by the theme and needs no component.
 
@@ -92,6 +93,48 @@ import diffPane from './images/diff-pane.png?image';
 ```
 
 The build reads each image's pixel size, so cropping and layout are fixed before the image loads. A missing file fails the build.
+
+## Interactive figures
+
+A figure that moves has two versions: the live one, and a still you author beside it. The still is what the PDF and the verifier's screenshots show, so draw it as a figure in its own right rather than a frozen frame of the live one.
+
+```tsx
+import { Interactive, Slide, trace, useTimeline } from '@mk-imagine/spa-slides';
+import { Line, Plot, Rule } from '@mk-imagine/spa-slides/chart';
+
+const gap = trace(recorded); // a recorded series, drawn up to any x
+
+function Replay() {
+  // One keyframe per step, step 0 included. Advancing a step glides there; anything else lands at once.
+  const trial = useTimeline([0, 120, { at: 700, duration: 5000 }]);
+  return (
+    <Plot width={900} height={400} x={{ domain: [0, 700] }} y={{ domain: [0, 1] }} label="The gap, as it was recorded">
+      <Line series={1} data={gap.at(trial)} />
+      <Rule x={trial} />
+    </Plot>
+  );
+}
+
+<Slide title="Told apart" steps={2}>
+  <p>Text outside the switch is shared, so the two versions cannot drift apart.</p>
+  <Interactive still={<AnnotatedGap />}>
+    <Replay />
+  </Interactive>
+</Slide>;
+```
+
+The build step is the position, and the clock only animates between keyframes, so the speaker view, going back a slide and print all follow the step. `useTimeline` works only inside a live version. `replay(frames)` and `trace(points)` turn its position into state: any position directly, and the same state every time.
+
+| The still shows | Because |
+|---|---|
+| In the PDF | `print-pdf` in the URL |
+| In the verifier's screenshots | it adds `?sps-verify=still` to the URL |
+| With `?still` in the URL | for presenting with no motion at all |
+| With `prefers-reduced-motion` set | the viewer asked for it |
+| When `T` is pressed | per slide, in every window including the speaker view. Press again to switch back |
+| When the live version throws | the slide keeps working, and the verifier fails |
+
+Each figure says which version it is showing, and why, on `data-sps-interactive` and `data-sps-still-reason`. From disk in Safari, `T` reaches the audience window from the speaker view but not the other way; served over http it reaches both.
 
 ## Checking a deck
 
@@ -127,9 +170,14 @@ Opens `dist/index.html` from disk in Chromium and checks:
 | every font is bundled and loaded | Text falls back to a system font, so it would wrap differently on another machine |
 | speaker view shows the notes | The speaker view does not open or does not show a slide's notes |
 | PDF has one page per slide | The exported PDF's page count, read from the file, differs from the slide count |
+| the PDF and the screenshots show each still | An interactive figure is printed or screenshotted live |
+| every live version renders | A live version throws, so its slide falls back to the still |
+| each still says what its live version says | A slide's text, with its figures removed, differs between the two versions |
 | no console errors or warnings | Anything is logged at error or warning level |
 
-It writes to `report/`: a screenshot of every slide, `contact-sheet.png` with all of them at once (failing slides outlined), `deck.pdf`, and `results.json` with per-slide measurements.
+The three checks on interactive figures run only in a deck that has some. Their slides are measured twice: with their stills, which the screenshots and the PDF use, and live, against the same layout checks.
+
+It writes to `report/`: a screenshot of every slide (and `NN-live.png` for each live version), `contact-sheet.png` with all of them at once (failing slides outlined), `deck.pdf`, and `results.json` with per-slide measurements.
 
 `verify` drives Playwright 1.63.0's Chromium. Run it in `mcr.microsoft.com/playwright:v1.63.0-noble`, which has that browser installed. The same checks are available programmatically from `@mk-imagine/spa-slides/verify` as `verifyDeck()`.
 
@@ -150,5 +198,6 @@ Fonts (Inter and JetBrains Mono) are bundled rather than taken from the system, 
 
 - 1920 × 1080 slides, scaled to any screen
 - Speaker view (press `S`), which works when the deck is opened from disk
+- `T` switches the current slide's interactive figures between still and live, in every window
 - PDF export: open `index.html?print-pdf` and print, one page per slide
 - Single-file build: scripts, styles, fonts, and imported images are inlined; `public/` files are copied beside it

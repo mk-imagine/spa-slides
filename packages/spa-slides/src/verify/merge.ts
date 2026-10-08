@@ -45,5 +45,6 @@ export function mergeStepReports(reports: SlideReport[]): SlideReport {
     overflowCount: merged.length,
     fonts: union((r) => r.fonts),
     labelOverlaps: [...overlaps.values()],
+    rendered: union((r) => r.rendered),
   };
 }
