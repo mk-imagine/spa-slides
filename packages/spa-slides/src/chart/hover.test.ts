@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { barAt, lineRows, nameOf, rangeAt, readable, valueAt, type HoverMark } from './hover.js';
+import { barAt, lineRows, nameOf, placePanel, rangeAt, readable, valueAt, type HoverMark } from './hover.js';
 import { makeScale } from './scales.js';
 
 describe('valueAt', () => {
@@ -84,5 +84,30 @@ describe('barAt', () => {
 
   it('finds nothing between rows', () => {
     expect(barAt([bar], x, y, { x: 30, y: 140 })).toBeUndefined();
+  });
+});
+
+describe('placePanel', () => {
+  // A chart 400 wide and 300 tall, its data area starting 100 in and 20 down.
+  const chart = { left: -100, top: -20, right: 300, bottom: 280 };
+
+  it('sits right of the point and above it when there is room', () => {
+    expect(placePanel({ x: 50, y: 200 }, 100, 60, chart, 10)).toEqual({ left: 60, top: 130 });
+  });
+
+  it('goes left when the right would leave the chart, however near the middle the point is', () => {
+    expect(placePanel({ x: 150, y: 200 }, 200, 60, chart, 10)).toEqual({ left: -60, top: 130 });
+  });
+
+  it('stays inside the chart when neither side has room', () => {
+    expect(placePanel({ x: 100, y: 200 }, 380, 60, chart, 10)).toEqual({ left: -80, top: 130 });
+  });
+
+  it('slides down when there is no room above', () => {
+    expect(placePanel({ x: 50, y: 0 }, 100, 60, chart, 10).top).toBe(-20);
+  });
+
+  it('starts a panel taller than the chart at its top, so its first rows read', () => {
+    expect(placePanel({ x: 50, y: 270 }, 100, 400, chart, 10).top).toBe(-20);
   });
 });

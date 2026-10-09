@@ -250,9 +250,15 @@ Before it, step 2's replays became library structures: `reveal` on a Plot that e
 `<Playhead>`, `<Replay>` for the common case, `useStepValue`, and `sps-dimmed`. The talk's figures
 lost their hand-rolled replay code to them.
 
-Not yet: the verifier does not hover, so a readout that overflows a slide near its edge would pass.
-WebKit from disk carries the pointer only from the speaker view to the projector, as spike 4 found
-for the key.
+The verifier hovers every chart, at its last step and in both versions: the corners, edges and
+center of the data area, and every bar's row. It fails a readout cut off by a box it is in, one
+that runs off the slide, one whose text reads `NaN`, and one that stays once the pointer has gone.
+Its first run on the talk found a readout on slide 30 running 84 pixels off the slide, because the
+panel chose its side at the chart's midpoint without asking whether it fitted; a readout now stays
+inside its chart, so a chart that fits on its slide keeps its readouts on it.
+
+Not yet: WebKit from disk carries the pointer only from the speaker view to the projector, as
+spike 4 found for the key.
 
 ### 4. Spike: a live model
 

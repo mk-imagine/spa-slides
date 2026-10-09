@@ -1,0 +1,6 @@
+/* A box narrower than the chart inside it, which cuts the chart off: hover readouts near the
+   chart's right edge are cut off with it, and the verifier must say so. */
+.clips {
+  width: 560px;
+  overflow: hidden;
+}

@@ -349,7 +349,7 @@ describe('interactive figures', () => {
     };
 
     beforeAll(async () => {
-      result = await verifyDeck({ deckDir, expectSlides: 8 });
+      result = await verifyDeck({ deckDir, expectSlides: 9 });
     }, 180_000);
 
     it('screenshots and prints every still', () => {
@@ -381,6 +381,20 @@ describe('interactive figures', () => {
       expect(check('overflow').pass).toBe(false);
       expect(check('overflow').detail).toEqual([expect.objectContaining({ slide: 5, version: 'live' })]);
       expect(result.slides[4]!.overflowCount).toBe(0);
+    });
+
+    it('hovers every chart, and fails a readout cut off by a box its chart is in, there alone', () => {
+      const hover = check('hover');
+      expect(hover.pass).toBe(false);
+      const detail = hover.detail as { charts: number; readouts: number; problems: { slide: number; problem: string }[] };
+      expect(detail.readouts).toBeGreaterThan(0);
+      expect(new Set(detail.problems.map((p) => `${p.slide} ${p.problem}`))).toEqual(new Set(['9 clipped']));
+      expect(result.slides[8]!.overflowCount).toBe(0);
+    });
+
+    it('hovers the live version too, and leaves a slide with no chart alone', () => {
+      expect(result.slides[PLAYHEAD]!.live!.hover).toMatchObject({ charts: 1, problems: [] });
+      expect(result.slides[5]!.hover).toBeUndefined();
     });
 
     it('leaves a slide with nothing interactive to one pass', () => {

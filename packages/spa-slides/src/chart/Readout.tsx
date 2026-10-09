@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { usePointerOn, type PointerOnSlide } from '../interactive/runtime.js';
 import { markClass, usePlot } from './context.js';
-import { barAt, lineRows, nameOf, readable } from './hover.js';
+import { barAt, lineRows, nameOf, placePanel, readable, type Box } from './hover.js';
 import type { LegendItem } from './Legend.js';
 import type { Margin } from './Plot.js';
 
@@ -36,8 +36,8 @@ interface Row {
   text: string;
 }
 
-/** A panel of rows beside a point, on whichever side has room, and kept inside the data area. */
-function Panel({ at, rows, width, height }: { at: { x: number; y: number }; rows: Row[]; width: number; height: number }) {
+/** A panel of rows beside a point, on whichever side has room, and kept inside its chart. */
+function Panel({ at, rows, bounds }: { at: { x: number; y: number }; rows: Row[]; bounds: Box }) {
   const texts = useRef<SVGGElement>(null);
   const guess = Math.max(...rows.map((r) => r.text.length * CHAR + (r.key ? KEY : 0)));
   const [measured, setMeasured] = useState<number | null>(null);
@@ -49,8 +49,7 @@ function Panel({ at, rows, width, height }: { at: { x: number; y: number }; rows
   }, [rows.map((r) => r.text).join('\n')]);
   const w = PAD * 2 + (measured ?? guess);
   const h = PAD * 2 + rows.length * LINE;
-  const left = at.x > width / 2 ? at.x - GAP - w : at.x + GAP;
-  const top = Math.min(Math.max(at.y - h - GAP, 0), Math.max(height - h, 0));
+  const { left, top } = placePanel(at, w, h, bounds, GAP);
   return (
     <g transform={`translate(${left},${top})`}>
       <rect className="sps-hover__panel" width={w} height={h} rx={6} />
@@ -74,8 +73,10 @@ function Panel({ at, rows, width, height }: { at: { x: number; y: number }; rows
  * the deck's pointer, not the mouse, so the presenter hovering in the speaker view shows the same
  * readout on the projector. Every mark reports what it has drawn, so a chart needs nothing added.
  */
-export function Readout({ svg, slide, margin, width, legend }: { svg: RefObject<SVGSVGElement | null>; slide: number; margin: Margin; width: number; legend: readonly LegendItem[] }) {
+export function Readout({ svg, slide, margin, width, height, legend }: { svg: RefObject<SVGSVGElement | null>; slide: number; margin: Margin; width: number; height: number; legend: readonly LegendItem[] }) {
   const plot = usePlot();
+  // The whole chart, margins included, in the data area's pixels.
+  const bounds: Box = { left: -margin.left, top: -margin.top, right: width - margin.left, bottom: height - margin.top };
   const pointer = usePointerOn(slide);
   if (pointer === null || svg.current === null) return null;
   const at = inPlot(svg.current, pointer, width, margin);
@@ -91,7 +92,7 @@ export function Readout({ svg, slide, margin, width, legend }: { svg: RefObject<
     const value = `${readable(bar.value)}${bar.range ? ` (${readable(bar.range[0])}–${readable(bar.range[1])})` : ''}`;
     return (
       <g className="sps-hover">
-        <Panel at={at} width={plot.width} height={plot.height} rows={name === undefined ? [{ text: value }] : [{ text: name }, { text: value }]} />
+        <Panel at={at} bounds={bounds} rows={name === undefined ? [{ text: value }] : [{ text: name }, { text: value }]} />
       </g>
     );
   }
@@ -109,8 +110,7 @@ export function Readout({ svg, slide, margin, width, legend }: { svg: RefObject<
       ))}
       <Panel
         at={at}
-        width={plot.width}
-        height={plot.height}
+        bounds={bounds}
         rows={[
           { text: readable(x) },
           ...rows.map((row) => ({
