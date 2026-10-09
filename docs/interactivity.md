@@ -254,8 +254,12 @@ The verifier hovers every chart, at its last step and in both versions: the corn
 center of the data area, and every bar's row. It fails a readout cut off by a box it is in, one
 that runs off the slide, one whose text reads `NaN`, and one that stays once the pointer has gone.
 Its first run on the talk found a readout on slide 30 running 84 pixels off the slide, because the
-panel chose its side at the chart's midpoint without asking whether it fitted; a readout now stays
-inside its chart, so a chart that fits on its slide keeps its readouts on it.
+panel chose its side at the chart's midpoint without asking whether it fitted. The first fix kept a
+readout inside its chart, which was a stand-in for the real rule and failed on small charts: slide
+26's readouts were taller than the chart, fitted neither above nor below the pointer inside it, and
+covered the point they reported on. A readout now stays where it can be seen, the slide less any box
+that clips the chart, free to cover the slide's other content as any readout does, and never covers
+its point unless it fits nowhere; the verifier fails one that does.
 
 Not yet: WebKit from disk carries the pointer only from the speaker view to the projector, as
 spike 4 found for the key.

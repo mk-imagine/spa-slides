@@ -143,14 +143,22 @@ export interface Box {
 }
 
 /**
- * Where a readout panel of size w × h goes beside the point it reports on, kept inside `bounds`,
- * the whole chart: a chart that fits on its slide then keeps its readouts on it too. It sits to the
- * right of the point if it fits there, else to the left, else as near as the chart allows; and above
- * the point, sliding down where there is no room above.
+ * Where a readout panel of size w × h goes, inside `bounds`, the part of the slide where it can be
+ * seen. It never covers the point it reports on if it can help it: beside the point, right if there
+ * is room and else left, above it or as near as fits; or, where neither side has room, centered on
+ * it, above if there is room and else below. Only a panel that fits nowhere covers the point, and it
+ * starts at the top of the bounds so its first lines read.
  */
 export function placePanel(at: { x: number; y: number }, w: number, h: number, bounds: Box, gap: number): { left: number; top: number } {
   const clamp = (value: number, low: number, high: number) => Math.max(low, Math.min(value, high));
   const right = at.x + gap;
-  const left = right + w <= bounds.right ? right : at.x - gap - w >= bounds.left ? at.x - gap - w : clamp(right, bounds.left, bounds.right - w);
-  return { left, top: clamp(at.y - gap - h, bounds.top, bounds.bottom - h) };
+  const left = at.x - gap - w;
+  const beside = right + w <= bounds.right ? right : left >= bounds.left ? left : null;
+  if (beside !== null) return { left: beside, top: clamp(at.y - gap - h, bounds.top, bounds.bottom - h) };
+  const above = at.y - gap - h;
+  const below = at.y + gap;
+  return {
+    left: clamp(at.x - w / 2, bounds.left, bounds.right - w),
+    top: above >= bounds.top ? above : below + h <= bounds.bottom ? below : bounds.top,
+  };
 }

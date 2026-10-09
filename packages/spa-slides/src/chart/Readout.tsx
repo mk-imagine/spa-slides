@@ -31,6 +31,31 @@ function inPlot(svg: SVGSVGElement, pointer: PointerOnSlide, width: number, marg
   };
 }
 
+/** Room left between a readout and the edge of what can be seen. */
+const INSET = 8;
+
+/**
+ * The part of the slide where a readout on this chart can be seen, in the chart's data-area pixels:
+ * the slide, less anything around the chart that clips what it holds. A readout may cover the
+ * slide's other content, as any readout does; it must not be cut off or leave the slide.
+ */
+function visibleRegion(svg: SVGSVGElement, width: number, height: number, margin: Margin): Box | null {
+  const slides = document.querySelector<HTMLElement>('.reveal .slides');
+  const box = svg.getBoundingClientRect();
+  if (!slides || box.width === 0 || box.height === 0) return null;
+  let { left, top, right, bottom } = slides.getBoundingClientRect();
+  const section = svg.closest('section');
+  for (let a = svg.parentElement; a && a !== section; a = a.parentElement) {
+    const style = getComputedStyle(a);
+    const clip = a.getBoundingClientRect();
+    if (style.overflowX !== 'visible') [left, right] = [Math.max(left, clip.left), Math.min(right, clip.right)];
+    if (style.overflowY !== 'visible') [top, bottom] = [Math.max(top, clip.top), Math.min(bottom, clip.bottom)];
+  }
+  const x = (client: number) => ((client - box.left) * width) / box.width - margin.left;
+  const y = (client: number) => ((client - box.top) * height) / box.height - margin.top;
+  return { left: x(left) + INSET, top: y(top) + INSET, right: x(right) - INSET, bottom: y(bottom) - INSET };
+}
+
 interface Row {
   key?: string;
   text: string;
@@ -75,10 +100,10 @@ function Panel({ at, rows, bounds }: { at: { x: number; y: number }; rows: Row[]
  */
 export function Readout({ svg, slide, margin, width, height, legend }: { svg: RefObject<SVGSVGElement | null>; slide: number; margin: Margin; width: number; height: number; legend: readonly LegendItem[] }) {
   const plot = usePlot();
-  // The whole chart, margins included, in the data area's pixels.
-  const bounds: Box = { left: -margin.left, top: -margin.top, right: width - margin.left, bottom: height - margin.top };
   const pointer = usePointerOn(slide);
   if (pointer === null || svg.current === null) return null;
+  // Where the readout can be seen; the chart itself, margins included, if that cannot be measured.
+  const bounds: Box = visibleRegion(svg.current, width, height, margin) ?? { left: -margin.left, top: -margin.top, right: width - margin.left, bottom: height - margin.top };
   const at = inPlot(svg.current, pointer, width, margin);
   if (at === null) return null;
   const marks = [...plot.marks.values()];

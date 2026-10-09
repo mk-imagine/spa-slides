@@ -88,26 +88,35 @@ describe('barAt', () => {
 });
 
 describe('placePanel', () => {
-  // A chart 400 wide and 300 tall, its data area starting 100 in and 20 down.
-  const chart = { left: -100, top: -20, right: 300, bottom: 280 };
+  // What can be seen: 400 wide and 300 tall, starting 100 left of the data area and 20 above it.
+  const seen = { left: -100, top: -20, right: 300, bottom: 280 };
+  const covers = (p: { left: number; top: number }, w: number, h: number, at: { x: number; y: number }) =>
+    at.x >= p.left && at.x <= p.left + w && at.y >= p.top && at.y <= p.top + h;
 
   it('sits right of the point and above it when there is room', () => {
-    expect(placePanel({ x: 50, y: 200 }, 100, 60, chart, 10)).toEqual({ left: 60, top: 130 });
+    expect(placePanel({ x: 50, y: 200 }, 100, 60, seen, 10)).toEqual({ left: 60, top: 130 });
   });
 
-  it('goes left when the right would leave the chart, however near the middle the point is', () => {
-    expect(placePanel({ x: 150, y: 200 }, 200, 60, chart, 10)).toEqual({ left: -60, top: 130 });
+  it('goes left when the right would leave what can be seen, however near the middle the point is', () => {
+    expect(placePanel({ x: 150, y: 200 }, 200, 60, seen, 10)).toEqual({ left: -60, top: 130 });
   });
 
-  it('stays inside the chart when neither side has room', () => {
-    expect(placePanel({ x: 100, y: 200 }, 380, 60, chart, 10)).toEqual({ left: -80, top: 130 });
+  it('beside the point, slides down when there is no room above', () => {
+    expect(placePanel({ x: 50, y: 0 }, 100, 60, seen, 10).top).toBe(-20);
   });
 
-  it('slides down when there is no room above', () => {
-    expect(placePanel({ x: 50, y: 0 }, 100, 60, chart, 10).top).toBe(-20);
+  it('with no room on either side, goes above the point, centered on it', () => {
+    expect(placePanel({ x: 100, y: 200 }, 380, 60, seen, 10)).toEqual({ left: -90, top: 130 });
   });
 
-  it('starts a panel taller than the chart at its top, so its first rows read', () => {
-    expect(placePanel({ x: 50, y: 270 }, 100, 400, chart, 10).top).toBe(-20);
+  it('with no room on either side or above, goes below rather than over the point', () => {
+    const at = { x: 100, y: 40 };
+    const placed = placePanel(at, 380, 120, seen, 10);
+    expect(placed.top).toBe(50);
+    expect(covers(placed, 380, 120, at)).toBe(false);
+  });
+
+  it('covers the point only when it fits nowhere, starting at the top so its first rows read', () => {
+    expect(placePanel({ x: 100, y: 140 }, 380, 200, seen, 10)).toEqual({ left: -90, top: -20 });
   });
 });
