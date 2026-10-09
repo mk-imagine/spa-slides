@@ -51,19 +51,21 @@ function targets({ index, attribute, grid }: { index: number; attribute: string;
 
 /**
  * Every readout on the slide, measured: how far it is cut off by anything that clips it, or runs
- * past the slide, and whether its text reads. Runs in the page, so it takes what it needs as arguments.
+ * past the slide; whether it covers the point it reports on, which is where the pointer is; and
+ * whether its text reads. Runs in the page, so it takes what it needs as arguments.
  */
-function inspect({ index, tolerance }: { index: number; tolerance: number }) {
+function inspect({ index, tolerance, point }: { index: number; tolerance: number; point: { x: number; y: number } }) {
   const section = document.querySelectorAll<HTMLElement>('.reveal .slides > section')[index]!;
   const slides = document.querySelector<HTMLElement>('.reveal .slides')!;
   const frame = slides.getBoundingClientRect();
   const scale = frame.width / slides.offsetWidth;
-  const found: { kind: 'clipped' | 'off the slide' | 'unreadable'; detail: string }[] = [];
+  const found: { kind: 'clipped' | 'off the slide' | 'unreadable' | 'covers the point'; detail: string }[] = [];
   const panels = [...section.querySelectorAll('.sps-hover__panel')];
   for (const panel of panels) {
     const box = panel.getBoundingClientRect();
     const text = [...(panel.parentElement?.querySelectorAll('text') ?? [])].map((t) => t.textContent ?? '').join(' / ');
     if (/NaN|undefined|Infinity/.test(text)) found.push({ kind: 'unreadable', detail: text });
+    if (point.x > box.left && point.x < box.right && point.y > box.top && point.y < box.bottom) found.push({ kind: 'covers the point', detail: text });
     // The slide's edges, then every box between the panel and the slide that clips what is in it.
     const limits: { kind: 'clipped' | 'off the slide'; box: DOMRect }[] = [{ kind: 'off the slide', box: frame }];
     for (let a = panel.parentElement; a && a !== section; a = a.parentElement) {
@@ -95,7 +97,7 @@ export async function exerciseHover(page: Page, index: number, tolerance: number
   for (const point of points) {
     await page.mouse.move(point.x, point.y);
     await settle(page);
-    const seen = await page.evaluate(inspect, { index, tolerance });
+    const seen = await page.evaluate(inspect, { index, tolerance, point: { x: point.x, y: point.y } });
     readouts += seen.readouts;
     for (const f of seen.found) problems.push({ chart: point.chart, where: point.where, problem: f.kind, detail: f.detail });
   }

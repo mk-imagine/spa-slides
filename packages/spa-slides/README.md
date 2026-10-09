@@ -211,7 +211,7 @@ Opens `dist/index.html` from disk in Chromium and checks:
 | the PDF and the screenshots show each still | An interactive figure is printed or screenshotted live |
 | every live version renders | A live version throws, so its slide falls back to the still |
 | each still says what its live version says | A slide's text, with its figures removed, differs between the two versions |
-| every hover readout stays in view | Hovering a chart gives a readout that is cut off by a box it is in, runs off the slide, reads `NaN`, or stays once the pointer has gone |
+| every hover readout stays in view | Hovering a chart gives a readout that is cut off by a box it is in, runs off the slide, covers the point it reports on, reads `NaN`, or stays once the pointer has gone |
 | no console errors or warnings | Anything is logged at error or warning level |
 
 The three checks on interactive figures run only in a deck that has some. Their slides are measured twice: with their stills, which the screenshots and the PDF use, and live, against the same layout checks.

@@ -21,8 +21,11 @@ export interface HoverProblem {
   chart: string;
   /** Where the pointer was. */
   where: string;
-  /** `clipped` by a box the readout is in; `off the slide`; `unreadable` text; or a readout that `stays` once the pointer has gone. */
-  problem: 'clipped' | 'off the slide' | 'unreadable' | 'stays';
+  /**
+   * `clipped` by a box the readout is in; `off the slide`; a readout that `covers the point` it
+   * reports on; `unreadable` text; or a readout that `stays` once the pointer has gone.
+   */
+  problem: 'clipped' | 'off the slide' | 'covers the point' | 'unreadable' | 'stays';
   detail: string;
 }
 

@@ -388,7 +388,9 @@ describe('interactive figures', () => {
       expect(hover.pass).toBe(false);
       const detail = hover.detail as { charts: number; readouts: number; problems: { slide: number; problem: string }[] };
       expect(detail.readouts).toBeGreaterThan(0);
-      expect(new Set(detail.problems.map((p) => `${p.slide} ${p.problem}`))).toEqual(new Set(['9 clipped']));
+      expect(new Set(detail.problems.map((p) => p.slide))).toEqual(new Set([9]));
+      // Too wide for the box, it is cut off, and with nowhere else to go it covers the point too.
+      expect(new Set(detail.problems.map((p) => p.problem))).toEqual(new Set(['clipped', 'covers the point']));
       expect(result.slides[8]!.overflowCount).toBe(0);
     });
 
