@@ -10,6 +10,19 @@ export const VERIFY_PARAM = 'sps-verify';
 /** URL parameter that forces every still, for opening a deck with no motion at all. */
 export const STILL_PARAM = 'still';
 
+/**
+ * Which of the windows showing the deck this is. The speaker view runs two copies of the deck in
+ * frames, both with `receiver` in their URL: the current slide, which Reveal also gives
+ * `postMessageEvents`, and the upcoming one, which can show the next click of the same slide.
+ */
+export type WindowRole = 'audience' | 'current' | 'upcoming';
+
+export function windowRole(search: string = window.location.search): WindowRole {
+  const params = new URLSearchParams(search);
+  if (!params.has('receiver')) return 'audience';
+  return params.get('postMessageEvents') === 'true' ? 'current' : 'upcoming';
+}
+
 export interface Environment {
   /** Reveal's print layout, which the PDF export is made from. */
   print: boolean;
@@ -19,6 +32,7 @@ export interface Environment {
   query: boolean;
   /** The viewer's `prefers-reduced-motion` setting. */
   reducedMotion: boolean;
+  role: WindowRole;
 }
 
 /**
@@ -36,6 +50,7 @@ export function readEnvironment(): Environment {
     verify: verify === 'still' || verify === 'live' ? verify : null,
     query: params.has(STILL_PARAM),
     reducedMotion: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
+    role: windowRole(search),
   };
 }
 

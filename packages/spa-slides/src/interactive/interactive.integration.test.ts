@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
+import { chromium, type Browser, type BrowserContext, type Frame, type Page } from 'playwright';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildFixtureDeck } from '../testing/build-fixture.js';
 import { verifyDeck, type CheckId, type VerifyResult } from '../verify/index.js';
@@ -149,6 +149,102 @@ describe('interactive figures', () => {
       expect(await markers(page)).toBe(1);
       await context.close();
     });
+  });
+
+  describe('the pointer', () => {
+    const PLAIN = 5;
+    /** Where the mirrored dot is in a page, in slide coordinates; null when it is not drawn. */
+    const dotIn = (target: Page | Frame) =>
+      target.evaluate(() => {
+        const dot = document.querySelector('.sps-pointer');
+        const slides = document.querySelector<HTMLElement>('.reveal .slides')!;
+        if (!dot) return null;
+        const box = slides.getBoundingClientRect();
+        const scale = box.width / slides.offsetWidth;
+        const d = dot.getBoundingClientRect();
+        return { x: (d.left + d.width / 2 - box.left) / scale, y: (d.top + d.height / 2 - box.top) / scale };
+      });
+    /** The point in a page's window that is at (x, y) on its slide. */
+    const clientAt = (target: Page | Frame, x: number, y: number) =>
+      target.evaluate(([x, y]) => {
+        const slides = document.querySelector<HTMLElement>('.reveal .slides')!;
+        const box = slides.getBoundingClientRect();
+        const scale = box.width / slides.offsetWidth;
+        return [box.left + x * scale, box.top + y * scale] as const;
+      }, [x, y] as const);
+    const near = (dot: { x: number; y: number } | null, x: number, y: number, within: number) =>
+      dot !== null && Math.abs(dot.x - x) < within && Math.abs(dot.y - y) < within;
+
+    it('draws the mouse over one window as a dot in another, at the same place on the slide', async () => {
+      const context = await browser.newContext();
+      const pointing = await open(context, '', PLAIN);
+      const watching = await open(context, '', PLAIN);
+      await pointing.mouse.move(...(await clientAt(pointing, 600, 400)));
+      await expect.poll(async () => near(await dotIn(watching), 600, 400, 2)).toBe(true);
+      expect(await dotIn(pointing)).toBeNull();
+      await pointing.mouse.move(2, 2);
+      await expect.poll(() => dotIn(watching)).toBeNull();
+      await context.close();
+    });
+
+    it('moves the pointer to the new slide when the slide changes under a mouse that has not moved', async () => {
+      const context = await browser.newContext();
+      const pointing = await open(context, '', PLAIN);
+      const watching = await open(context, '', PLAIN);
+      await pointing.mouse.move(...(await clientAt(pointing, 900, 500)));
+      await expect.poll(async () => near(await dotIn(watching), 900, 500, 2)).toBe(true);
+      await pointing.keyboard.press('ArrowRight');
+      await expect.poll(() => dotIn(watching)).toBeNull();
+      await watching.keyboard.press('ArrowRight');
+      await expect.poll(async () => near(await dotIn(watching), 900, 500, 2)).toBe(true);
+      await context.close();
+    });
+
+    it('mirrors the speaker view\'s current slide on the projector, and the projector on it, but not the upcoming slide', async () => {
+      const context = await browser.newContext();
+      const audience = await open(context, '', PLAIN);
+      const [speaker] = await Promise.all([context.waitForEvent('page'), audience.keyboard.press('s')]);
+      await speaker.waitForLoadState('load');
+      // The frames exist before they have navigated, so wait for the URLs that tell them apart.
+      await expect.poll(() => speaker.frames().filter((f) => f.url().includes('receiver')).length).toBe(2);
+      const panes = speaker.frames().slice(1);
+      for (const frame of panes) await frame.waitForSelector('.reveal.ready');
+      const current = panes.find((f) => f.url().includes('postMessageEvents'))!;
+      const upcoming = panes.find((f) => f !== current)!;
+      const offset = async (frame: Frame) => (await (await frame.frameElement()).boundingBox())!;
+
+      // The pane is drawn at about a third of full size: a pixel there is three on the slide.
+      const box = await offset(current);
+      const [px, py] = await clientAt(current, 960, 540);
+      await speaker.mouse.move(box.x + px, box.y + py);
+      await expect.poll(async () => near(await dotIn(audience), 960, 540, 4)).toBe(true);
+
+      const next = await offset(upcoming);
+      await speaker.mouse.move(next.x + next.width / 2, next.y + next.height / 2);
+      await expect.poll(() => dotIn(audience)).toBeNull();
+      expect(await dotIn(upcoming)).toBeNull();
+
+      await audience.bringToFront();
+      await audience.mouse.move(...(await clientAt(audience, 700, 300)));
+      await expect.poll(async () => near(await dotIn(current), 700, 300, 2)).toBe(true);
+      await context.close();
+    });
+
+    it('keeps the presenter\'s cursor in the speaker view when the mouse is still', async () => {
+      const context = await browser.newContext();
+      const audience = await open(context, '', PLAIN);
+      const [speaker] = await Promise.all([context.waitForEvent('page'), audience.keyboard.press('s')]);
+      await speaker.waitForLoadState('load');
+      await expect.poll(() => speaker.frames().some((f) => f.url().includes('postMessageEvents'))).toBe(true);
+      const current = speaker.frames().find((f) => f.url().includes('postMessageEvents'))!;
+      await current.waitForSelector('.reveal.ready');
+      const box = (await (await current.frameElement()).boundingBox())!;
+      await speaker.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      // Reveal hides an idle cursor after five seconds.
+      await speaker.waitForTimeout(5500);
+      expect(await current.evaluate(() => document.querySelector<HTMLElement>('.reveal')!.style.cursor)).not.toBe('none');
+      await context.close();
+    }, 15_000);
   });
 
   describe('the key', () => {
