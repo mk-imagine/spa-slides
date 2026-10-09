@@ -3,7 +3,8 @@ import { Deck as RevealDeck } from '@revealjs/react';
 import type { RevealApi } from 'reveal.js';
 import RevealNotes from 'reveal.js/plugin/notes';
 import { readEnvironment } from '../interactive/environment.js';
-import { InteractiveContext } from '../interactive/Interactive.js';
+import { PointerStore } from '../interactive/pointer.js';
+import { PointerLayer, RuntimeContext, type DeckRuntime } from '../interactive/runtime.js';
 import { TOGGLE_KEY, ToggleStore } from '../interactive/toggle.js';
 import { SLIDE_HEIGHT, SLIDE_WIDTH } from './size.js';
 
@@ -51,8 +52,15 @@ export function Deck({ meta, transition = 'fade', slideNumbers = true, controls 
     document.title = meta.title;
   }, [meta.title]);
 
-  const [interactive] = useState(() => ({ environment: readEnvironment(), store: new ToggleStore(`sps-still:${meta.title}`) }));
-  useEffect(() => interactive.store.connect(), [interactive]);
+  const [runtime] = useState<DeckRuntime>(() => ({
+    environment: readEnvironment(),
+    toggles: new ToggleStore(`sps-still:${meta.title}`),
+    pointer: new PointerStore(`sps-pointer:${meta.title}`),
+  }));
+  useEffect(() => runtime.toggles!.connect(), [runtime]);
+  useEffect(() => runtime.pointer!.connect(runtime.environment.role), [runtime]);
+  /** Reveal's slide box, where the presenter's mirrored pointer is drawn. */
+  const [slides, setSlides] = useState<Element | null>(null);
 
   // The slide number is offset to clear the nav arrows. With the arrows off there is nothing to
   // clear, and Reveal leaves their box behind at zero size, so the stylesheet cannot tell on its
@@ -64,7 +72,7 @@ export function Deck({ meta, transition = 'fade', slideNumbers = true, controls 
 
   return (
     <DeckMetaContext.Provider value={meta}>
-      <InteractiveContext.Provider value={interactive}>
+      <RuntimeContext.Provider value={runtime}>
         <RevealDeck
           config={{
             width: SLIDE_WIDTH,
@@ -80,15 +88,24 @@ export function Deck({ meta, transition = 'fade', slideNumbers = true, controls 
             pdfSeparateFragments: false,
             // One page per slide. An overfull slide is a layout bug for the verifier to catch, not extra pages.
             pdfMaxPagesPerSlide: 1,
+            // Reveal hides an idle cursor; in the speaker view's frames that takes away the
+            // presenter's own cursor while they hold the pointer still on something.
+            hideInactiveCursor: runtime.environment.role === 'audience',
           }}
           plugins={PLUGINS}
           // Bound through Reveal rather than as a keydown listener: the speaker view forwards keys to
           // its preview frame by calling Reveal directly, so a listener never hears them there.
-          onReady={(reveal: RevealApi) => reveal.addKeyBinding(TOGGLE_KEY, () => interactive.store.toggleCurrent())}
+          onReady={(reveal: RevealApi) => {
+            reveal.addKeyBinding(TOGGLE_KEY, () => runtime.toggles!.toggleCurrent());
+            // A slide that changes under a mouse that has not moved puts the pointer on a new slide.
+            reveal.on('slidechanged', runtime.pointer!.refresh);
+            setSlides(reveal.getSlidesElement());
+          }}
         >
           {children}
         </RevealDeck>
-      </InteractiveContext.Provider>
+        {slides !== null && <PointerLayer slides={slides} />}
+      </RuntimeContext.Provider>
     </DeckMetaContext.Provider>
   );
 }

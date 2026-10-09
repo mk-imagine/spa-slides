@@ -1,3 +1,5 @@
+import { openChannel, type DeckChannel } from './channel.js';
+
 /**
  * The key that switches the current slide between its still and its live version. `t` is free of
  * Reveal's own bindings and is not something a presenter's clicker sends (clickers send page
@@ -26,40 +28,26 @@ export function slideIndexOf(element: Element): number {
 }
 
 /**
- * Which slides the presenter has switched, shared by every window showing the deck: the audience
- * window, and the speaker view's two preview frames, each of which runs its own copy of the deck.
+ * Which slides the presenter has switched, shared by every window showing the deck.
  *
  * Messages carry the whole state, never "flip", so a window that missed one or opened late cannot
- * end up inverted; a window that opens asks the others for it. They go out on a BroadcastChannel
- * and as a storage event, because neither reaches everywhere (docs/interactivity-spike-4.md): from
- * disk in WebKit only the storage event crosses, and only from the speaker view to the audience.
+ * end up inverted; a window that opens asks the others for it.
  */
 export class ToggleStore {
   private toggled: ReadonlySet<number> = new Set();
   private readonly listeners = new Set<() => void>();
-  private channel: BroadcastChannel | null = null;
+  private channel: DeckChannel | null = null;
 
-  /** `name` scopes the messages to one deck, since every deck opened from disk shares one storage area. */
+  /** `name` scopes the messages to one deck. */
   constructor(private readonly name: string) {}
-
-  private readonly onStorage = (event: StorageEvent) => {
-    if (event.key !== this.name || event.newValue === null) return;
-    this.receive(JSON.parse(event.newValue));
-  };
 
   /** Starts listening, and asks any window already open for its state. Returns the disconnect. */
   connect(): () => void {
-    if (typeof BroadcastChannel !== 'undefined') {
-      const channel = new BroadcastChannel(this.name);
-      channel.onmessage = (event: MessageEvent) => this.receive(event.data);
-      this.channel = channel;
-    }
-    window.addEventListener('storage', this.onStorage);
+    this.channel = openChannel(this.name, (message) => this.receive(message));
     this.send({ type: 'hello' });
     return () => {
       this.channel?.close();
       this.channel = null;
-      window.removeEventListener('storage', this.onStorage);
     };
   }
 
@@ -104,14 +92,6 @@ export class ToggleStore {
   }
 
   private send(message: Message) {
-    this.channel?.postMessage(message);
-    // The nonce makes every write a change, since an unchanged value raises no storage event.
-    const value = JSON.stringify({ ...message, nonce: Math.random() });
-    try {
-      localStorage.setItem(this.name, value);
-    } catch {
-      // Storage can be disabled outright (a locked-down browser profile). The channel still carries
-      // the state wherever it reaches, so this only narrows where the toggle is shared.
-    }
+    this.channel?.send(message);
   }
 }

@@ -1,7 +1,8 @@
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useSteps } from '../core/steps.js';
 import { allowsMotion } from './environment.js';
-import { LiveContext, useEnvironment } from './Interactive.js';
+import { LiveContext } from './Interactive.js';
+import { useEnvironment } from './runtime.js';
 
 /** Where a timeline rests at one build step, and how it gets there. */
 export interface Keyframe {

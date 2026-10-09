@@ -1,12 +1,12 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { proseDifference } from '../verify/prose.js';
-import { allowsMotion, stillReason, type Environment } from './environment.js';
+import { allowsMotion, stillReason, windowRole, type Environment } from './environment.js';
 import { replay, trace } from './sources.js';
 import { useStepValue } from '../core/steps.js';
 import { glidePosition, useTimeline } from './timeline.js';
 
-const presenting: Environment = { print: false, verify: null, query: false, reducedMotion: false };
+const presenting: Environment = { print: false, verify: null, query: false, reducedMotion: false, role: 'audience' };
 
 describe('stillReason', () => {
   it('shows the live version to a presenter, and the still when the key is pressed', () => {
@@ -34,6 +34,14 @@ describe('stillReason', () => {
   it('reports a failure over everything else, including the verifier’s live pass', () => {
     expect(stillReason({ ...presenting, verify: 'live' }, false, true)).toBe('error');
     expect(stillReason({ ...presenting, print: true }, false, true)).toBe('error');
+  });
+});
+
+describe('windowRole', () => {
+  it('tells the audience window from the speaker view\'s two frames, by the URLs Reveal gives them', () => {
+    expect(windowRole('')).toBe('audience');
+    expect(windowRole('?receiver&progress=false&scrollActivationWidth=false&postMessageEvents=true')).toBe('current');
+    expect(windowRole('?receiver&progress=false&scrollActivationWidth=false&controls=false')).toBe('upcoming');
   });
 });
 

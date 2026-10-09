@@ -1,23 +1,10 @@
-import { Component, createContext, useContext, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { readEnvironment, stillReason, type Environment } from './environment.js';
-import { INTERACTIVE_ATTRIBUTE, slideIndexOf, type ToggleStore } from './toggle.js';
-
-interface InteractiveContextValue {
-  environment: Environment;
-  /** Null outside a deck, where there is no key to press and no other window to tell. */
-  store: ToggleStore | null;
-}
-
-export const InteractiveContext = createContext<InteractiveContextValue | null>(null);
+import { Component, createContext, useContext, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { stillReason } from './environment.js';
+import { RuntimeContext, useEnvironment, useSlideIndex } from './runtime.js';
+import { INTERACTIVE_ATTRIBUTE } from './toggle.js';
 
 /** True inside the live version of an `<Interactive>`, the only place anything may move. */
 export const LiveContext = createContext(false);
-
-/** The environment the deck is being shown in, read once when the deck mounts. */
-export function useEnvironment(): Environment {
-  const context = useContext(InteractiveContext);
-  return useMemo(() => context?.environment ?? readEnvironment(), [context]);
-}
 
 const NO_STORE = () => () => {};
 
@@ -61,12 +48,10 @@ export interface InteractiveProps {
  * text does.
  */
 export function Interactive({ still, children }: InteractiveProps) {
-  const context = useContext(InteractiveContext);
+  const store = useContext(RuntimeContext)?.toggles ?? null;
   const environment = useEnvironment();
-  const store = context?.store ?? null;
   const ref = useRef<HTMLDivElement>(null);
-  const [slide, setSlide] = useState(-1);
-  useLayoutEffect(() => setSlide(ref.current ? slideIndexOf(ref.current) : -1), []);
+  const slide = useSlideIndex(ref);
   const snapshot = () => (store !== null && slide >= 0 ? store.has(slide) : false);
   const toggled = useSyncExternalStore(store?.subscribe ?? NO_STORE, snapshot, snapshot);
   const [failed, setFailed] = useState(false);

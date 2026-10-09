@@ -469,3 +469,21 @@
 .sps-playhead {
   stroke: var(--sps-color-fg);
 }
+
+/* The presenter's pointer, mirrored from another window. The layer spans the slide box, above the
+   slide and never in the way of the mouse. */
+.sps-pointer-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.sps-pointer {
+  r: var(--sps-pointer-radius);
+  fill: var(--sps-pointer-color);
+  stroke: var(--sps-color-bg);
+  stroke-width: 4px;
+  opacity: 0.85;
+}
