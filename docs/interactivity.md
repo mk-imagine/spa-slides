@@ -190,10 +190,51 @@ The verifier also had a race that animation would have exposed: it waited for Re
 step's fragments, not for React to render the step. The step engine now publishes the step it has
 rendered, and the verifier waits for both.
 
-The step finishes when the seven slides are migrated and pass the talk's gate, in the talk's own
-repository.
+**The talk's half is done too**, in its own repository and passing its gate, and two of the seven
+slides turned out not to be what the plan assumed:
 
-### 3. Spike: a live model
+- **12, general before specific.** The talk's outline asked for a map of each item's internal
+  pattern as a dot, splitting apart over training. Measured on a control run, it cannot be drawn
+  faithfully: the items do not start together, and every 2-D projection tried squashes the item
+  level, showing two siblings converging while the network pulls them apart. The slide animates the
+  chart it already showed instead, decoded from the report that chart came from.
+- **21, back to the opening question.** Not a replay at all: the outline's replay for it was
+  optional, and its still was never built. It became highlights instead, one condition per click.
+  They are the live version of its figures, not builds, because a build's last state is what prints.
+
+The other five replay their stills' own data. One needed data the deck did not hold: slide 19's clock
+switch moves every sample to its exact place on total training.
+
+### 3. Hover, and a pointer the projector mirrors
+
+Pulled forward from the controls step, because the talk wants it now: a chart that answers a hover
+with its values, as Plotly's do, and a projector that shows where the presenter's pointer is in the
+speaker view, hover and all.
+
+Built into the library's own charts rather than by adopting Plotly. The full Plotly bundle is about
+6 MB and the basic one 1.2 MB, against a talk deck of 1.8 MB in all; its charts would not look like
+the deck's other thirty; and the verifier's chart checks are built around the library's marks.
+
+The two are one feature. A chart's hover should follow *the pointer* (the local mouse, or the
+presenter's mirrored one) from the start. Hover built per window first would have to be retrofitted
+into every chart that has it. Only what the library draws can be mirrored: readouts, highlights, the
+pointer itself. A browser's own hover styling cannot be replayed in another window.
+
+The speaker view's current-slide pane is a full copy of the deck, so the library is already running
+under the presenter's mouse there. The unknowns, for a spike:
+
+- Does that pane receive pointer events at all, or does something sit over it?
+- Do positions map exactly between the pane and the audience window, through Reveal's scaling,
+  in the slide's own 1920 × 1080 coordinates?
+- Does the channel the `t` key uses keep up at pointer-move rates, including the storage-event
+  fallback WebKit needs from disk?
+- How does it meet Reveal hiding an idle cursor, and a click, which must not navigate?
+
+Hover never reaches the PDF or the screenshots, so it adds nothing a still has to show. The verifier
+should still exercise it, since a readout near the edge of a slide can overflow it. Slides 12 and 21
+are the first to use it.
+
+### 4. Spike: a live model
 
 *The live-model spike.*
 
@@ -207,11 +248,11 @@ the whole plan.
   print may block briefly, because print is not latency-sensitive.
 - Whether a worker is needed, or whether chunking on the main thread is enough at this size.
 
-### 4. The simulation source
+### 5. The simulation source
 
 Generalize, and migrate the live-simulation slides (7, 8, 10, 26).
 
-### 5. Spike: direct manipulation
+### 6. Spike: direct manipulation
 
 *The direct-manipulation spike.*
 
@@ -219,12 +260,12 @@ Generalize, and migrate the live-simulation slides (7, 8, 10, 26).
 so it tests whether the contract holds for state that comes from a gesture. A control value is a
 position like any other, and it needs a declared default that print and the verifier see.
 
-### 6. Controls, and the rest of the deck
+### 7. Controls, and the rest of the deck
 
 The explorer (27) and the scripted animation (28), which should both fall out of the primitives
 by this point. If they do not, the primitives are wrong.
 
-### 7. Make the verifier enforce it
+### 8. Make the verifier enforce it
 
 The checks that stop this decaying:
 
@@ -237,7 +278,7 @@ By the same reasoning as the `references-cited` check: a claim the tooling enfor
 and a claim in a comment does not.
 
 **Done in step 2.** Spikes 1 to 3 showed that a timeline without these checks quietly degrades the
-gate meant to catch it, so they landed with the timeline rather than after it. Steps 3 to 6 add
+gate meant to catch it, so they landed with the timeline rather than after it. Steps 3 to 7 add
 sources and controls, and each should leave these checks passing rather than add to them.
 
 ## What must not break
@@ -257,8 +298,8 @@ sources and controls, and each should leave these checks passing rather than add
 | Which key plays and pauses without fighting Reveal? | Spike 1: mostly moot, since the clicker advances keyframes |
 | Does the speaker view need its own sync channel, or do fragments suffice? | Spike 1: fragments suffice |
 | Does the verifier need a hold hook, or can it drive steps as it already does? | Spike 1, then step 2: it drives steps, and timelines land on keyframes when it announces itself |
-| Main thread or worker for a live model? | Open: the live-model spike (step 3) |
-| Does a gesture-driven control fit the same contract as a timeline? | Open: the direct-manipulation spike (step 5) |
+| Main thread or worker for a live model? | Open: the live-model spike (step 4) |
+| Does a gesture-driven control fit the same contract as a timeline? | Open: the direct-manipulation spike (step 6) |
 | Does the static/interactive override cross windows? | Spike 3: yes, on a BroadcastChannel, even from disk |
 | How is drift between the two versions caught? | Spike 3: prose equality, figures excluded |
 | What key toggles the still, and is it safe in the speaker view? | Spike 4: `t`, bound through Reveal; it navigates nothing |
@@ -267,7 +308,7 @@ sources and controls, and each should leave these checks passing rather than add
 ## Cost, honestly
 
 Steps 1–2 are worth doing regardless: they pay for themselves across seven slides and carry the
-least risk. Step 3 is the one that could prove expensive, and it is worth knowing before starting
+least risk. Step 4 is the one that could prove expensive, and it is worth knowing before starting
 it that the linear-network slide's static alternative already works. If the live version costs
 more than it teaches, stopping after step 2 leaves the deck better than it is now and the library
 with a timeline it can use.
