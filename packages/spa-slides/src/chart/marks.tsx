@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { line as d3line } from 'd3-shape';
-import { markClass, position, usePlot, type MarkTone } from './context.js';
+import { trace } from '../interactive/sources.js';
+import { markClass, position, reached, usePlot, type MarkTone } from './context.js';
 
 /** Where a label sits relative to its anchor point. */
 export type LabelPosition = 'right' | 'left' | 'above' | 'below';
@@ -55,10 +56,18 @@ export interface LineProps {
   label?: ReactNode;
   labelPosition?: LabelPosition;
   labelOffset?: [number, number];
+  /** Drawn whole while the chart is revealed, for what is known in advance, such as a prediction. */
+  whole?: boolean;
 }
 
-export function Line({ data, series, tone, ordinal, dashed = false, label, labelPosition = 'right', labelOffset }: LineProps) {
-  const { x, y, clipId } = usePlot();
+/** The part of a series a revealed chart shows: up to the reveal, with the last point interpolated. */
+function revealed(data: readonly Point[], reveal: number | undefined, whole: boolean): Point[] {
+  return whole || reveal === undefined ? [...data] : trace(data).at(reveal);
+}
+
+export function Line({ data: all, series, tone, ordinal, dashed = false, label, labelPosition = 'right', labelOffset, whole = false }: LineProps) {
+  const { x, y, clipId, reveal } = usePlot();
+  const data = revealed(all, reveal, whole);
   const path = d3line<Point>()
     .defined((p) => p[1] !== null && Number.isFinite(p[1]))
     .x((p) => position(x, p[0], 'x'))
@@ -87,11 +96,16 @@ export interface BandProps {
   /** Step in an ordinal ramp (1-8), for a series with an order. Not with `series`. */
   ordinal?: number;
   tone?: MarkTone;
+  /** Drawn whole while the chart is revealed. */
+  whole?: boolean;
 }
 
 /** The spread around a line, such as the range over runs. Drawn as a wash, under the line it belongs to. */
-export function Band({ data, series, tone, ordinal }: BandProps) {
-  const { x, y, clipId } = usePlot();
+export function Band({ data: all, series, tone, ordinal, whole = false }: BandProps) {
+  const { x, y, clipId, reveal } = usePlot();
+  const low = revealed(all.map(([px, l]) => [px, l]), reveal, whole);
+  const high = revealed(all.map(([px, , h]) => [px, h]), reveal, whole);
+  const data: BandPoint[] = low.map(([px, l], i) => [px, l, high[i]?.[1] ?? null]);
   const defined = data.filter((p): p is [number, number, number] => p[1] !== null && p[2] !== null && Number.isFinite(p[1]) && Number.isFinite(p[2]));
   if (defined.length < 2) return null;
   const top = defined.map((p) => `${position(x, p[0], 'x')},${position(y, p[2], 'y')}`);
@@ -107,14 +121,18 @@ export interface RuleProps {
   /** Placed beside the line, never across it: above the right end of a horizontal rule, right of the top of a vertical one. */
   label?: ReactNode;
   dashed?: boolean;
+  /** Drawn while the chart is revealed even before the reveal reaches it. Horizontal rules always are. */
+  whole?: boolean;
 }
 
 /** A reference line across the data area, such as a threshold or an event. */
-export function Rule({ x: xValue, y: yValue, label, dashed = false }: RuleProps) {
-  const { x, y, width, height } = usePlot();
+export function Rule({ x: xValue, y: yValue, label, dashed = false, whole = false }: RuleProps) {
+  const plot = usePlot();
+  const { x, y, width, height } = plot;
   if ((xValue === undefined) === (yValue === undefined)) {
     throw new Error('[spa-slides] <Rule> needs exactly one of x or y');
   }
+  if (xValue !== undefined && !reached(plot, xValue, whole)) return null;
   const className = `sps-rule${dashed ? ' sps-rule--dashed' : ''}`;
   if (yValue !== undefined) {
     const py = position(y, yValue, 'y');
@@ -148,22 +166,28 @@ export type SpanProps = {
   ordinal?: number;
   tone?: MarkTone;
   label?: ReactNode;
+  /** Drawn whole while the chart is revealed. Otherwise a vertical band grows with the reveal. */
+  whole?: boolean;
 } & (
   | { /** A vertical band between these x values. */ x0: number; x1: number; y0?: never; y1?: never }
   | { /** A horizontal band between these y values. */ y0: number; y1: number; x0?: never; x1?: never }
 );
 
 /** A shaded interval: a vertical band (x0–x1) such as a qualifying run, or a horizontal one (y0–y1) such as a range of values. */
-export function Span({ series, tone = 'muted', ordinal, label, ...band }: SpanProps) {
-  const { x, y, width, height, clipId } = usePlot();
+export function Span({ series, tone = 'muted', ordinal, label, whole = false, ...band }: SpanProps) {
+  const plot = usePlot();
+  const { x, y, width, height, clipId, reveal } = plot;
   const className = `sps-span ${markClass(series, series === undefined ? tone : undefined, ordinal)}`;
   if (band.x0 !== undefined) {
-    const left = Math.min(position(x, band.x0, 'x'), position(x, band.x1, 'x'));
-    const right = Math.max(position(x, band.x0, 'x'), position(x, band.x1, 'x'));
+    const [from, to] = band.x0 <= band.x1 ? [band.x0, band.x1] : [band.x1, band.x0];
+    if (!reached(plot, from, whole)) return null;
+    const shownTo = whole || reveal === undefined ? to : Math.min(to, reveal);
+    const left = position(x, from, 'x');
+    const right = position(x, shownTo, 'x');
     return (
       <g>
         <rect className={className} x={left} width={right - left} y={0} height={height} clipPath={`url(#${clipId})`} />
-        {label !== undefined && (
+        {label !== undefined && reached(plot, to, whole) && (
           <MarkLabel x={(left + right) / 2} y={0} position="below">
             {label}
           </MarkLabel>
@@ -197,11 +221,15 @@ export interface MarkerProps {
   labelOffset?: [number, number];
   /** An outline instead of a filled dot, as a second encoding (for example, "lost strength first"). */
   hollow?: boolean;
+  /** Drawn while the chart is revealed even before the reveal reaches it. */
+  whole?: boolean;
 }
 
 /** A point mark with a ring in the surface color, so it stays legible on top of lines. */
-export function Marker({ x: xValue, y: yValue, series, tone, ordinal, label, labelPosition = 'above', labelOffset, hollow = false }: MarkerProps) {
-  const { x, y } = usePlot();
+export function Marker({ x: xValue, y: yValue, series, tone, ordinal, label, labelPosition = 'above', labelOffset, hollow = false, whole = false }: MarkerProps) {
+  const plot = usePlot();
+  const { x, y } = plot;
+  if (!reached(plot, xValue, whole)) return null;
   const px = position(x, xValue, 'x');
   const py = position(y, yValue, 'y');
   return (
@@ -252,16 +280,29 @@ export interface BarProps {
   range?: [low: number, high: number];
   /** Direct label, placed past the end of the bar or its range, whichever reaches further. */
   label?: ReactNode;
+  /** Drawn whole while the chart is revealed. */
+  whole?: boolean;
 }
 
-/** A bar from a baseline to a value, with an optional range whisker and a direct label past its end. */
-export function Bar({ orientation = 'horizontal', at, value, base = 0, thickness = 32, series, tone, ordinal, range, label }: BarProps) {
-  const { x, y, xType, yType } = usePlot();
+/**
+ * A bar from a baseline to a value, with an optional range whisker and a direct label past its end.
+ * While the chart is revealed, a horizontal bar grows with the reveal and gets its whisker and label
+ * once it is whole; a vertical bar appears once the reveal reaches it.
+ */
+export function Bar({ orientation = 'horizontal', at, value: full, base = 0, thickness = 32, series, tone, ordinal, range: fullRange, label: fullLabel, whole = false }: BarProps) {
+  const plot = usePlot();
+  const { x, y, xType, yType, reveal } = plot;
   const horizontal = orientation === 'horizontal';
   if ((horizontal ? xType : yType) === 'log') {
     // A bar's length is read from zero, and a log axis has no zero.
     throw new Error('[spa-slides] <Bar> needs a linear value axis; on a log axis, use <Marker> as a dot plot');
   }
+  const farEnd = Math.max(full, base, ...(fullRange ?? []));
+  if (!reached(plot, horizontal ? Math.min(full, base) : at, whole)) return null;
+  const complete = reached(plot, horizontal ? farEnd : at, whole);
+  const value = complete || reveal === undefined ? full : full >= base ? Math.min(full, reveal) : full;
+  const range = complete ? fullRange : undefined;
+  const label = complete ? fullLabel : undefined;
   const valueAxis = horizontal ? 'x' : 'y';
   const crossAxis = horizontal ? 'y' : 'x';
   const valueScale = horizontal ? x : y;
@@ -292,11 +333,15 @@ export interface WhiskerProps {
   high: number;
   /** Length of the end caps in slide pixels. */
   cap?: number;
+  /** Drawn while the chart is revealed even before the reveal reaches all of it. */
+  whole?: boolean;
 }
 
-/** A range (such as min–max over runs) drawn over its bar. */
-export function Whisker({ orientation = 'horizontal', at, low, high, cap = 16 }: WhiskerProps) {
-  const { x, y } = usePlot();
+/** A range (such as min–max over runs) drawn over its bar. While revealed, it appears once whole. */
+export function Whisker({ orientation = 'horizontal', at, low, high, cap = 16, whole = false }: WhiskerProps) {
+  const plot = usePlot();
+  const { x, y } = plot;
+  if (!reached(plot, orientation === 'horizontal' ? Math.max(low, high) : at, whole)) return null;
   if (orientation === 'horizontal') {
     const py = y(at);
     const [a, b] = [x(low), x(high)];
@@ -315,6 +360,34 @@ export function Whisker({ orientation = 'horizontal', at, low, high, cap = 16 }:
       <line x1={px} x2={px} y1={a} y2={b} />
       <line x1={px - cap / 2} x2={px + cap / 2} y1={a} y2={a} />
       <line x1={px - cap / 2} x2={px + cap / 2} y1={b} y2={b} />
+    </g>
+  );
+}
+
+export interface PlayheadProps {
+  /** Text beside the playhead, such as a running count. It sits on whichever side has room. */
+  label?: ReactNode;
+}
+
+/**
+ * Where a revealed chart has got to: a line at the reveal, shown while the chart fills in and gone
+ * once it is whole, so a finished replay looks like its still.
+ */
+export function Playhead({ label }: PlayheadProps) {
+  const { x, height, reveal } = usePlot();
+  const [start, end] = x.domain() as [number, number];
+  if (reveal === undefined || reveal >= end) return null;
+  const px = position(x, Math.max(start, reveal), 'x');
+  // Past the middle, a label on the right would run off the chart.
+  const late = reveal > (start + end) / 2;
+  return (
+    <g>
+      <line className="sps-rule sps-playhead" x1={px} x2={px} y1={0} y2={height} />
+      {label !== undefined && (
+        <text className="sps-mark-label" x={px + (late ? -LABEL_GAP / 2 : LABEL_GAP / 2)} y={0} textAnchor={late ? 'end' : 'start'} dominantBaseline="hanging">
+          {label}
+        </text>
+      )}
     </g>
   );
 }

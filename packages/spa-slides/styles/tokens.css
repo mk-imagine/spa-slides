@@ -85,4 +85,7 @@
   --sps-chart-stroke: 4px;
   --sps-chart-marker-radius: 8px;
   --sps-text-chart: 24px;
+
+  /* What a highlight puts in the background: faint enough to step back, still legible from the room. */
+  --sps-opacity-dimmed: 0.25;
 }

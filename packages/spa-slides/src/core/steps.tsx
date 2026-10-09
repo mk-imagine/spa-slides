@@ -20,6 +20,19 @@ export function useSteps(): StepState {
   return useContext(StepContext);
 }
 
+/**
+ * One value per step, step 0 included, and the one for the step the slide is on: for what changes
+ * in jumps rather than glides, such as which group a click highlights. A position that glides
+ * between steps is `useTimeline`'s job.
+ */
+export function useStepValue<T>(values: readonly T[]): T {
+  const { step, count } = useSteps();
+  if (values.length !== count + 1) {
+    throw new Error(`[spa-slides] useStepValue needs one value per step, step 0 included: ${count + 1} for this slide, got ${values.length}`);
+  }
+  return values[step]!;
+}
+
 
 /**
  * Gives a slide `count` clicks. Reveal advances through a slide's `.fragment` elements and marks

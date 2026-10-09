@@ -11,6 +11,17 @@ export interface PlotState {
   height: number;
   /** Clip path that keeps data marks inside the data area. */
   clipId: string;
+  /** How far along x the chart is drawn, while a replay fills it in. Undefined: all of it. */
+  reveal?: number;
+}
+
+/**
+ * Whether a mark at `x` is drawn yet. The one rule every mark follows while a chart is revealed:
+ * anything at an x appears once the reveal reaches it. A mark drawn `whole` ignores the reveal, for
+ * what is known in advance, such as a theory's prediction.
+ */
+export function reached(plot: PlotState, x: number, whole = false): boolean {
+  return whole || plot.reveal === undefined || x <= plot.reveal;
 }
 
 export const PlotContext = createContext<PlotState | null>(null);

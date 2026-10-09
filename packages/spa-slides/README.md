@@ -79,6 +79,7 @@ See `examples/git-workshop` in this repository for a complete 35-slide deck.
 | `<MonoBlock align size>` | Verbatim monospace lines: file listings, terminal output |
 | `<Text as size tone align italic>` | Typed text variants, so slides never need ad-hoc sizes or colors |
 | `<Interactive still>` | A figure with a live version and an authored still. See [Interactive figures](#interactive-figures) |
+| `<Replay to on duration>` | A chart that fills in on a click; its still is the chart drawn whole. See [A replay](#a-replay-a-chart-that-fills-in-on-a-click) |
 
 Plain HTML (`p`, `ul`, `ol`, `dl`, `code`, `strong`, `em`, `table`) is styled by the theme and needs no component.
 
@@ -96,34 +97,63 @@ The build reads each image's pixel size, so cropping and layout are fixed before
 
 ## Interactive figures
 
-A figure that moves has two versions: the live one, and a still you author beside it. The still is what the PDF and the verifier's screenshots show, so draw it as a figure in its own right rather than a frozen frame of the live one.
+A figure that moves has two versions: the live one, and a still. The still is what the PDF and the verifier's screenshots show.
+
+### A replay: a chart that fills in on a click
+
+The common case takes a few lines. `<Replay>` plays its figure on a click, and its still is the figure drawn whole:
 
 ```tsx
-import { Interactive, Slide, trace, useTimeline } from '@mk-imagine/spa-slides';
-import { Line, Plot, Rule } from '@mk-imagine/spa-slides/chart';
+import { Replay, Slide } from '@mk-imagine/spa-slides';
+import { AxisX, Line, Marker, Playhead, Plot, Rule } from '@mk-imagine/spa-slides/chart';
 
-const gap = trace(recorded); // a recorded series, drawn up to any x
-
-function Replay() {
-  // One keyframe per step, step 0 included. Advancing a step glides there; anything else lands at once.
-  const trial = useTimeline([0, 120, { at: 700, duration: 5000 }]);
+function GapChart({ reveal }: { reveal?: number }) {
   return (
-    <Plot width={900} height={400} x={{ domain: [0, 700] }} y={{ domain: [0, 1] }} label="The gap, as it was recorded">
-      <Line series={1} data={gap.at(trial)} />
-      <Rule x={trial} />
+    <Plot width={900} height={400} x={{ domain: [0, 700] }} y={{ domain: [0, 1] }} reveal={reveal} label="The gap, as it was recorded">
+      <AxisX label="Trials" />
+      <Rule y={0.3} label="criterion" />
+      <Line series={1} data={gap} />
+      <Line series={1} dashed whole data={prediction} />
+      <Marker x={38} y={0.31} label="told apart: trial 38" />
+      <Playhead />
     </Plot>
   );
 }
 
-<Slide title="Told apart" steps={2}>
-  <p>Text outside the switch is shared, so the two versions cannot drift apart.</p>
-  <Interactive still={<AnnotatedGap />}>
-    <Replay />
-  </Interactive>
+<Slide title="Told apart" steps={1}>
+  <p>Text outside the figure is shared, so the two versions cannot drift apart.</p>
+  <Replay to={700} duration={5000}>{(x) => <GapChart reveal={x} />}</Replay>
 </Slide>;
 ```
 
-The build step is the position, and the clock only animates between keyframes, so the speaker view, going back a slide and print all follow the step. `useTimeline` works only inside a live version. `replay(frames)` and `trace(points)` turn its position into state: any position directly, and the same state every time.
+`reveal` on a `Plot` draws it only as far as that x. Every mark follows one rule: **anything at an x appears once the reveal reaches it.** Lines and bands draw up to it, markers and vertical rules appear when it gets there, and spans and bars grow with it, getting their labels once they are whole. Horizontal rules, axes and legends are always drawn. Give a mark `whole` to draw it in full from the start, for what is known in advance, such as a prediction. `<Playhead>` marks the reveal while the chart fills in and goes once it is whole, so a finished replay looks exactly like its still.
+
+`<Replay>` takes `from` (default 0), `to`, the click it plays `on` (default 1), and `duration`. Pass `still` when the static figure should be something other than the chart drawn whole.
+
+### Anything else: `<Interactive>` and the step hooks
+
+`<Replay>` is built from three pieces, which are there for whatever it does not cover:
+
+- `<Interactive still={…}>` switches a figure between an authored still and its live version. Wrap only the figure: text outside it is shared, and the verifier fails a slide whose text differs between the two.
+- `useTimeline(keyframes)` is a position that glides: one keyframe per click, step 0 included. Advancing a click glides there; anything else lands at once. It works only inside a live version.
+- `useStepValue(values)` is a value that jumps: one per click, step 0 included, such as which group a click highlights. Mark what steps back with the `sps-dimmed` class.
+
+```tsx
+function TwoClocks() {
+  const trials = useTimeline([0, { at: 900, duration: 5000 }, 900]);
+  const clock = useTimeline([0, 0, { at: 1, duration: 2500 }]);
+  const lit = useStepValue([undefined, 'salmon', 'sunfish']);
+  // …draw with all three
+}
+
+<Interactive still={<TwoPanels />}>
+  <TwoClocks />
+</Interactive>;
+```
+
+The click is the position, and the clock only animates between keyframes, so the speaker view, going back a slide and print all follow the click. `replay(frames)` and `trace(points)` turn a position into state: any position directly, and the same state every time.
+
+### What shows the still
 
 | The still shows | Because |
 |---|---|

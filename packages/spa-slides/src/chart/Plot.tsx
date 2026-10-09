@@ -26,13 +26,18 @@ export interface PlotProps {
    * touching whatever follows.
    */
   legend?: LegendItem[];
+  /**
+   * Draws the chart only as far as this x: lines and bands up to it, and every other mark once it
+   * is reached. A replay sets it from its timeline; its still leaves it out and gets the chart whole.
+   */
+  reveal?: number;
   children: ReactNode;
 }
 
 const DEFAULT_MARGIN: Margin = { top: 24, right: 40, bottom: 88, left: 104 };
 
 /** A chart's coordinate system. Axes and marks placed inside it share its scales. */
-export function Plot({ width, height, x, y, margin, label, legend, children }: PlotProps) {
+export function Plot({ width, height, x, y, margin, label, legend, reveal, children }: PlotProps) {
   const m = { ...DEFAULT_MARGIN, ...margin };
   const innerWidth = width - m.left - m.right;
   const innerHeight = height - m.top - m.bottom;
@@ -49,8 +54,9 @@ export function Plot({ width, height, x, y, margin, label, legend, children }: P
       width: innerWidth,
       height: innerHeight,
       clipId,
+      reveal,
     }),
-    [x.domain[0], x.domain[1], x.type, x.nice, y.domain[0], y.domain[1], y.type, y.nice, innerWidth, innerHeight, clipId],
+    [x.domain[0], x.domain[1], x.type, x.nice, y.domain[0], y.domain[1], y.type, y.nice, innerWidth, innerHeight, clipId, reveal],
   );
 
   const plot = (
