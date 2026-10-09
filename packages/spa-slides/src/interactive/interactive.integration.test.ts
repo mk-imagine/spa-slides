@@ -9,6 +9,7 @@ import { verifyDeck, type CheckId, type VerifyResult } from '../verify/index.js'
 // Slide positions in the interactive fixture, counted from 0 as Reveal's URL counts them.
 const PLAYHEAD = 1;
 const THROWS = 3;
+const REPLAY = 6;
 
 describe('interactive figures', () => {
   let deckDir: string;
@@ -88,7 +89,7 @@ describe('interactive figures', () => {
       await page.goto(`${url}?print-pdf`);
       await page.waitForSelector('.pdf-page', { state: 'attached' });
       const all = await page.evaluate(() => [...document.querySelectorAll('[data-sps-interactive]')].map((el) => el.getAttribute('data-sps-still-reason')));
-      expect(all).toEqual(['print', 'print', 'print', 'print']);
+      expect(all).toEqual(['print', 'print', 'print', 'print', 'print']);
       await context.close();
     });
   });
@@ -123,6 +124,29 @@ describe('interactive figures', () => {
         expect(seen.filter((p) => p !== keyframes[step - 1] && p !== keyframes[step])).toEqual([]);
         expect(seen.at(-1)).toBe(keyframes[step]);
       }
+      await context.close();
+    });
+  });
+
+  describe('a replay', () => {
+    const markers = (page: Page) => page.locator('section.present .sps-marker').count();
+
+    it('waits for its click, then fills in, its marks appearing as they are reached', async () => {
+      const context = await browser.newContext();
+      const page = await open(context, '?sps-verify=live', REPLAY);
+      expect(await markers(page)).toBe(0);
+      expect(await page.locator('section.present .sps-playhead').count()).toBe(1);
+      await page.keyboard.press('ArrowRight');
+      await expect.poll(() => markers(page)).toBe(1);
+      expect(await page.locator('section.present .sps-playhead').count()).toBe(0);
+      await context.close();
+    });
+
+    it('has the chart drawn whole as its still', async () => {
+      const context = await browser.newContext();
+      const page = await open(context, '?sps-verify=still', REPLAY);
+      expect(await rendered(page, REPLAY)).toBe('still:verify');
+      expect(await markers(page)).toBe(1);
       await context.close();
     });
   });
@@ -175,16 +199,16 @@ describe('interactive figures', () => {
     };
 
     beforeAll(async () => {
-      result = await verifyDeck({ deckDir, expectSlides: 6 });
+      result = await verifyDeck({ deckDir, expectSlides: 7 });
     }, 180_000);
 
     it('screenshots and prints every still', () => {
-      expect(check('stills')).toMatchObject({ pass: true, detail: { figures: 4, unstill: [] } });
+      expect(check('stills')).toMatchObject({ pass: true, detail: { figures: 5, unstill: [] } });
       expect(result.slides[PLAYHEAD]!.rendered).toEqual(['still:verify']);
     });
 
     it('measures the live version of each interactive slide, and screenshots every step of it', () => {
-      expect(result.slides.filter((s) => s.live).map((s) => s.slide)).toEqual([2, 3, 4, 5]);
+      expect(result.slides.filter((s) => s.live).map((s) => s.slide)).toEqual([2, 3, 4, 5, 7]);
       expect(result.slides[PLAYHEAD]!.live!.rendered).toEqual(['live']);
       for (const name of ['02-live-step-0', '02-live-step-2', '02-live', '02']) {
         expect(existsSync(join(result.outDir, 'slides', `${name}.png`))).toBe(true);

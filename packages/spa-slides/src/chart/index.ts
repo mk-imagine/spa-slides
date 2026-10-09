@@ -5,6 +5,7 @@ export {
   Bar,
   Line,
   Marker,
+  Playhead,
   Rule,
   Span,
   Whisker,
@@ -14,11 +15,12 @@ export {
   type LabelPosition,
   type LineProps,
   type MarkerProps,
+  type PlayheadProps,
   type Point,
   type RuleProps,
   type SpanProps,
   type WhiskerProps,
 } from './marks.js';
 export { Legend, type LegendItem } from './Legend.js';
-export { usePlot, type MarkTone, type PlotState } from './context.js';
+export { reached, usePlot, type MarkTone, type PlotState } from './context.js';
 export { formatNumber, type AxisSpec, type Scale } from './scales.js';

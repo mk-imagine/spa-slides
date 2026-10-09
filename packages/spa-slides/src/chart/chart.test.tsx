@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { AxisX, Band, Bar, Line, Marker, Plot, Span } from './index.js';
+import { AxisX, Band, Bar, Line, Marker, Playhead, Plot, Rule, Span } from './index.js';
 import { barPath } from './marks.js';
 import { makeScale } from './scales.js';
 
@@ -108,5 +108,64 @@ describe('AxisX', () => {
 describe('Plot', () => {
   it('refuses margins that leave no data area', () => {
     expect(() => plot(null, { width: 100 })).toThrow(/no room for data/);
+  });
+});
+
+describe('a revealed chart', () => {
+  // x domain 0–10 over a 456px data area, so the reveal at 5 sits at 228px.
+  // null: no reveal at all, which is what a still gets.
+  const revealed = (children: React.ReactNode, reveal: number | null = 5) => plot(children, { reveal: reveal ?? undefined });
+  const lineEnd = (svg: string) => Number(svg.match(/class="sps-line[^"]*" d="[^"]*L([\d.]+),[\d.]+"/)![1]);
+
+  it('draws a line only as far as the reveal, ending exactly there', () => {
+    expect(lineEnd(revealed(<Line data={[[0, 0], [10, 1]]} />))).toBeCloseTo(228);
+  });
+
+  it('draws a line whole when told to, as for a prediction made in advance', () => {
+    expect(lineEnd(revealed(<Line whole data={[[0, 0], [10, 1]]} />))).toBeCloseTo(456);
+  });
+
+  it('draws everything when there is no reveal, which is what a still gets', () => {
+    expect(lineEnd(revealed(<Line data={[[0, 0], [10, 1]]} />, null))).toBeCloseTo(456);
+  });
+
+  it('cuts a band at the reveal, both edges together', () => {
+    const d = revealed(<Band series={1} data={[[0, 0.2, 0.4], [10, 0.3, 0.6]]} />).match(/class="sps-band[^"]*" d="([^"]*)"/)![1]!;
+    expect(Math.max(...d.split(/[ML]/).filter(Boolean).map((p) => Number(p.split(',')[0])))).toBeCloseTo(228);
+  });
+
+  it('shows a marker, and a rule at an x, once the reveal reaches them', () => {
+    expect(revealed(<Marker x={7} y={0.5} />)).not.toContain('sps-marker');
+    expect(revealed(<Marker x={7} y={0.5} />, 7)).toContain('sps-marker');
+    expect(revealed(<Rule x={7} label="arrives" />)).not.toContain('arrives');
+    expect(revealed(<Rule y={0.3} label="criterion" />)).toContain('criterion');
+  });
+
+  it('grows a vertical span with the reveal, and labels it once it is whole', () => {
+    const span = <Span x0={2} x1={8} label="run" />;
+    const width = (svg: string) => Number(svg.match(/<rect class="sps-span[^"]*" x="[\d.]+" width="([\d.]+)"/)![1]);
+    expect(width(revealed(span))).toBeCloseTo(((5 - 2) / 10) * 456);
+    expect(revealed(span)).not.toContain('>run<');
+    expect(revealed(span, 9)).toContain('>run<');
+    expect(revealed(<Span x0={6} x1={8} />)).not.toContain('sps-span');
+  });
+
+  it('grows a bar with the reveal, and adds its whisker and label once it is whole', () => {
+    const bar = <Bar at={0.5} value={8} range={[6, 9]} label="median 8" />;
+    expect(revealed(bar)).not.toContain('sps-whisker');
+    expect(revealed(bar)).not.toContain('>median 8<');
+    expect(revealed(bar, 9)).toContain('sps-whisker');
+    expect(revealed(bar, 9)).toContain('>median 8<');
+  });
+
+  it('shows the playhead while the chart fills in, and not once it is whole', () => {
+    expect(revealed(<Playhead />)).toContain('sps-playhead');
+    expect(revealed(<Playhead />, 10)).not.toContain('sps-playhead');
+    expect(revealed(<Playhead />, null)).not.toContain('sps-playhead');
+  });
+
+  it('puts the playhead\'s label on whichever side has room', () => {
+    expect(revealed(<Playhead label="12 in a row" />, 2)).toMatch(/text-anchor="start"[^>]*>12 in a row/);
+    expect(revealed(<Playhead label="47 in a row" />, 8)).toMatch(/text-anchor="end"[^>]*>47 in a row/);
   });
 });

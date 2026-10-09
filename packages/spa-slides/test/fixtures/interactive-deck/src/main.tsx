@@ -1,13 +1,14 @@
 // A deck of interactive figures, each failing in one way at most, so tests can check that the
 // verifier's two passes report each problem on the right slide and in the right version.
-import { Deck, Figure, Interactive, Slide, TitleSlide, mountDeck, trace, useTimeline } from '@mk-imagine/spa-slides';
-import { AxisX, Line, Plot, Rule } from '@mk-imagine/spa-slides/chart';
+import { Deck, Figure, Interactive, Replay, Slide, TitleSlide, mountDeck, trace, useTimeline } from '@mk-imagine/spa-slides';
+import { AxisX, Line, Marker, Playhead, Plot, Rule } from '@mk-imagine/spa-slides/chart';
 import '@mk-imagine/spa-slides/styles.css';
 
-const SERIES = trace(Array.from({ length: 41 }, (_, i): [number, number] => [i, (i / 40) ** 2]));
+const POINTS = Array.from({ length: 41 }, (_, i): [number, number] => [i, (i / 40) ** 2]);
+const SERIES = trace(POINTS);
 
-/** A playhead over a recorded series: 0 on arrival, 10 at steps 1 and 2, 40 at step 3. */
-function Playhead() {
+/** A playhead over a recorded series, on useTimeline directly: 0 on arrival, 10 at steps 1 and 2, 40 at step 3. */
+function Glide() {
   const position = useTimeline([0, 10, 10, { at: 40, duration: 1200 }], { duration: 600 });
   return (
     <Figure label={`Live, at ${position.toFixed(2)}`}>
@@ -47,7 +48,7 @@ mountDeck(
     <Slide title="Playhead" steps={3}>
       <p>The text both versions share.</p>
       <Interactive still={<Still />}>
-        <Playhead />
+        <Glide />
       </Interactive>
     </Slide>
 
@@ -87,6 +88,20 @@ mountDeck(
     {/* 6: nothing interactive, for pressing the key where there is nothing to switch */}
     <Slide title="Plain">
       <p>Nothing to switch here.</p>
+    </Slide>
+
+    {/* 7: the common case: a replay that waits for its click, then fills in; its still is the chart whole */}
+    <Slide title="Replay" steps={1}>
+      <Replay to={40} duration={400}>
+        {(x) => (
+          <Plot width={900} height={360} x={{ domain: [0, 40] }} y={{ domain: [0, 1] }} reveal={x} label="A series that fills in">
+            <AxisX label="Trial" />
+            <Line series={1} data={POINTS} />
+            <Marker x={30} y={POINTS[30]![1]} label="reached at 30" />
+            <Playhead />
+          </Plot>
+        )}
+      </Replay>
     </Slide>
   </Deck>,
 );

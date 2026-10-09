@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { proseDifference } from '../verify/prose.js';
 import { allowsMotion, stillReason, type Environment } from './environment.js';
 import { replay, trace } from './sources.js';
+import { useStepValue } from '../core/steps.js';
 import { glidePosition, useTimeline } from './timeline.js';
 
 const presenting: Environment = { print: false, verify: null, query: false, reducedMotion: false };
@@ -52,6 +53,16 @@ describe('useTimeline', () => {
       return null;
     }
     expect(() => renderToStaticMarkup(<Bare />)).toThrow(/live version of an <Interactive>/);
+  });
+});
+
+describe('useStepValue', () => {
+  it('needs one value per step, step 0 included', () => {
+    function TwoValues() {
+      useStepValue(['a', 'b']);
+      return null;
+    }
+    expect(() => renderToStaticMarkup(<TwoValues />)).toThrow(/one value per step/);
   });
 });
 

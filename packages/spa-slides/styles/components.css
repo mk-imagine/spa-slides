@@ -459,3 +459,13 @@
 .sps-interactive {
   display: contents;
 }
+
+/* What a click puts in the background while it highlights something else. */
+.sps-dimmed {
+  opacity: var(--sps-opacity-dimmed);
+  transition: opacity 250ms ease;
+}
+
+.sps-playhead {
+  stroke: var(--sps-color-fg);
+}
