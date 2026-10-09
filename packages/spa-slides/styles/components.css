@@ -487,3 +487,45 @@
   stroke-width: 4px;
   opacity: 0.85;
 }
+
+/* A chart's answer to the pointer. It never takes the pointer itself. */
+.sps-hover {
+  pointer-events: none;
+}
+
+.sps-hover__rule {
+  stroke: var(--sps-color-fg);
+  stroke-width: 2px;
+  stroke-dasharray: 4 6;
+}
+
+.sps-hover__dot {
+  r: var(--sps-chart-marker-radius);
+  fill: var(--sps-mark);
+  stroke: var(--sps-color-bg);
+  stroke-width: 2px;
+}
+
+.sps-hover__panel {
+  fill: var(--sps-color-bg);
+  stroke: var(--sps-color-border);
+  stroke-width: 2px;
+}
+
+.sps-hover__text {
+  font-size: var(--sps-text-chart);
+  fill: var(--sps-color-fg);
+}
+
+.sps-hover__head {
+  font-weight: var(--sps-weight-strong);
+}
+
+.sps-hover__key {
+  stroke: var(--sps-mark);
+  stroke-width: var(--sps-chart-stroke);
+}
+
+.sps-hover__key--dashed {
+  stroke-dasharray: 6 4;
+}

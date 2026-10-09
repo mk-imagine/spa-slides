@@ -1,7 +1,7 @@
 // A deck of interactive figures, each failing in one way at most, so tests can check that the
 // verifier's two passes report each problem on the right slide and in the right version.
 import { Deck, Figure, Interactive, Replay, Slide, TitleSlide, mountDeck, trace, useTimeline } from '@mk-imagine/spa-slides';
-import { AxisX, Line, Marker, Playhead, Plot, Rule } from '@mk-imagine/spa-slides/chart';
+import { AxisX, Bar, Line, Marker, Playhead, Plot, Rule } from '@mk-imagine/spa-slides/chart';
 import '@mk-imagine/spa-slides/styles.css';
 
 const POINTS = Array.from({ length: 41 }, (_, i): [number, number] => [i, (i / 40) ** 2]);
@@ -102,6 +102,15 @@ mountDeck(
           </Plot>
         )}
       </Replay>
+    </Slide>
+
+    {/* 8: bars that answer a hover with their names, values and ranges */}
+    <Slide title="Bars">
+      <Plot width={900} height={360} x={{ domain: [0, 10] }} y={{ domain: [2, 0] }} label="Two named bars">
+        <AxisX label="Value" />
+        <Bar at={0.5} value={6} range={[5, 7]} thickness={60} series={1} name="first" />
+        <Bar at={1.5} value={3} thickness={60} series={2} name="second" />
+      </Plot>
     </Slide>
   </Deck>,
 );

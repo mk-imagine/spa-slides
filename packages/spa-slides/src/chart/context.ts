@@ -1,4 +1,5 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useId, useLayoutEffect } from 'react';
+import type { HoverMark } from './hover.js';
 import type { Scale } from './scales.js';
 
 export interface PlotState {
@@ -13,6 +14,28 @@ export interface PlotState {
   clipId: string;
   /** How far along x the chart is drawn, while a replay fills it in. Undefined: all of it. */
   reveal?: number;
+  /** What each mark has drawn, for the hover readout to answer from. */
+  marks: Map<string, HoverMark>;
+}
+
+/**
+ * Tells the plot's hover readout what a mark has drawn, as drawn, so a chart answers a hover with
+ * nothing added to it. Null withdraws it, for a mark that has not appeared yet.
+ */
+export function useHoverMark(mark: HoverMark | null) {
+  const { marks } = usePlot();
+  const id = useId();
+  // Recorded as the mark renders, so the readout, rendered after every mark, reads this render's;
+  // and again on every commit, because React in development unmounts each effect once and mounts it
+  // again, and the cleanup that withdraws a removed mark would otherwise leave it withdrawn.
+  if (mark === null) marks.delete(id);
+  else marks.set(id, mark);
+  useLayoutEffect(() => {
+    if (mark !== null) marks.set(id, mark);
+    return () => {
+      marks.delete(id);
+    };
+  });
 }
 
 /**

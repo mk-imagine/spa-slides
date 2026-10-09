@@ -5,6 +5,7 @@ export { Step, useStep, useStepValue, useSteps, type StepProps, type StepState }
 export { Interactive, type InteractiveProps } from './interactive/Interactive.js';
 export { useTimeline, type Keyframe, type TimelineOptions } from './interactive/timeline.js';
 export { Replay, type ReplayProps } from './interactive/Replay.js';
+export { usePointerOn, useSlideIndex, type PointerOnSlide } from './interactive/runtime.js';
 export { replay, trace, type Source } from './interactive/sources.js';
 export type { StillReason } from './interactive/environment.js';
 export { TitleSlide, type TitleSlideProps } from './core/TitleSlide.js';
