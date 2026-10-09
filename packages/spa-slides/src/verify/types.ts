@@ -16,6 +16,27 @@ export interface LabelOverlap {
   steps: number[];
 }
 
+export interface HoverProblem {
+  /** The chart's label. */
+  chart: string;
+  /** Where the pointer was. */
+  where: string;
+  /** `clipped` by a box the readout is in; `off the slide`; `unreadable` text; or a readout that `stays` once the pointer has gone. */
+  problem: 'clipped' | 'off the slide' | 'unreadable' | 'stays';
+  detail: string;
+}
+
+/** What hovering a slide's charts found, at its last step. */
+export interface HoverReport {
+  /** Charts on the slide that answer a hover. */
+  charts: number;
+  /** Points hovered. */
+  points: number;
+  /** Readouts that appeared, over all the points. */
+  readouts: number;
+  problems: HoverProblem[];
+}
+
 export interface SlideReport {
   /** 1-based, as the audience counts. */
   slide: number;
@@ -50,6 +71,8 @@ export interface SlideReport {
   rendered: string[];
   /** The slide's text with its figures removed: the claim it makes. Read at the last step. */
   prose: string;
+  /** Its charts hovered, at the last step; absent on a slide with no chart that answers a hover. */
+  hover?: HoverReport;
   /** A slide with interactive figures, measured again with their live versions showing. */
   live?: Omit<SlideReport, 'live'>;
 }
@@ -69,6 +92,7 @@ export type CheckId =
   | 'stills'
   | 'live'
   | 'prose'
+  | 'hover'
   | 'console';
 
 export interface Check {

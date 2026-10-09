@@ -2,6 +2,12 @@ import type { LegendItem } from './Legend.js';
 import type { BandPoint, Point } from './marks.js';
 import type { Scale } from './scales.js';
 
+/**
+ * Marks a chart that answers a hover, with its data area in the chart's own units: "left top width
+ * height". Shared by Plot and the verifier, which hovers every chart that has it.
+ */
+export const HOVER_ATTRIBUTE = 'data-sps-hover';
+
 /** What a line tells a hover readout: its data as drawn (after any reveal), and how to name it. */
 export interface HoverLine {
   kind: 'line';
@@ -126,4 +132,25 @@ export function barAt(marks: readonly HoverMark[], x: Scale, y: Scale, point: { 
       const center = (horizontal ? y : x)(bar.at);
       return Math.abs((horizontal ? point.y : point.x) - center) <= bar.thickness / 2;
     });
+}
+
+/** A box in a plot's own pixels, measured from the top left of its data area. */
+export interface Box {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+/**
+ * Where a readout panel of size w × h goes beside the point it reports on, kept inside `bounds`,
+ * the whole chart: a chart that fits on its slide then keeps its readouts on it too. It sits to the
+ * right of the point if it fits there, else to the left, else as near as the chart allows; and above
+ * the point, sliding down where there is no room above.
+ */
+export function placePanel(at: { x: number; y: number }, w: number, h: number, bounds: Box, gap: number): { left: number; top: number } {
+  const clamp = (value: number, low: number, high: number) => Math.max(low, Math.min(value, high));
+  const right = at.x + gap;
+  const left = right + w <= bounds.right ? right : at.x - gap - w >= bounds.left ? at.x - gap - w : clamp(right, bounds.left, bounds.right - w);
+  return { left, top: clamp(at.y - gap - h, bounds.top, bounds.bottom - h) };
 }

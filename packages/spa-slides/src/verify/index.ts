@@ -9,11 +9,12 @@ import { INTERACTIVE_ATTRIBUTE } from '../interactive/toggle.js';
 import { renderContactSheet } from './contact-sheet.js';
 import { measureSlide } from './measure.js';
 import { mergeStepReports } from './merge.js';
+import { exerciseHover } from './hover.js';
 import { countPdfPages } from './pdf.js';
 import { proseDifference } from './prose.js';
 import type { Check, SlideReport, VerifyOptions, VerifyResult } from './types.js';
 
-export type { Check, CheckId, Overflow, SlideReport, VerifyOptions, VerifyResult } from './types.js';
+export type { Check, CheckId, HoverProblem, HoverReport, Overflow, SlideReport, VerifyOptions, VerifyResult } from './types.js';
 
 const SECTIONS = '.reveal .slides > section';
 const TOLERANCE_PX = 1.5;
@@ -85,7 +86,7 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
     page.on('pageerror', (e) => consoleMessages.push(`[${label}] uncaught: ${e.message}`));
   };
 
-  /** Measures one slide at every build step, screenshotting each. */
+  /** Measures one slide at every build step, screenshotting each, then hovers its charts at the last. */
   const measureSteps = async (page: Page, index: number, version: 'still' | 'live') => {
     const steps = await page.locator(SECTIONS).nth(index).locator(`.${STEP_MARKER_CLASS}`).count();
     const reports: SlideReport[] = [];
@@ -94,7 +95,9 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
       reports.push(await page.evaluate(measureSlide, { index, step, tolerance: TOLERANCE_PX }));
       await page.screenshot({ path: shotPath(version, index + 1, step === steps ? undefined : step) });
     }
-    return mergeStepReports(reports);
+    // After the screenshots, which must not show a readout; it leaves the mouse off the slide.
+    const hover = await exerciseHover(page, index, TOLERANCE_PX);
+    return { ...mergeStepReports(reports), ...(hover ? { hover } : {}) };
   };
 
   const slides: SlideReport[] = [];
@@ -261,6 +264,23 @@ export async function verifyDeck(options: VerifyOptions): Promise<VerifyResult> 
         return difference === null ? [] : [{ slide: s.slide, title: s.title, ...difference }];
       });
       record({ id: 'prose', name: 'each still says what its live version says', pass: drifted.length === 0, detail: drifted });
+    }
+
+    // A readout appears only under a pointer, so no screenshot or other check ever sees one.
+    const hovered = slides.flatMap((s) => versions(s).flatMap(({ version, report }) => (report.hover ? [{ slide: s.slide, version, hover: report.hover }] : [])));
+    if (hovered.length > 0) {
+      const problems = hovered.flatMap(({ slide, version, hover }) => hover.problems.map((p) => ({ slide, ...(version ? { version } : {}), ...p })));
+      record({
+        id: 'hover',
+        name: 'every hover readout stays in view',
+        pass: problems.length === 0,
+        detail: {
+          charts: hovered.reduce((n, h) => n + h.hover.charts, 0),
+          points: hovered.reduce((n, h) => n + h.hover.points, 0),
+          readouts: hovered.reduce((n, h) => n + h.hover.readouts, 0),
+          problems: problems.slice(0, 20),
+        },
+      });
     }
 
     await renderContactSheet(browser, slides, screenshotPath, join(outDir, 'contact-sheet.png'));

@@ -3,6 +3,7 @@
 import { Deck, Figure, Interactive, Replay, Slide, TitleSlide, mountDeck, trace, useTimeline } from '@mk-imagine/spa-slides';
 import { AxisX, Bar, Line, Marker, Playhead, Plot, Rule } from '@mk-imagine/spa-slides/chart';
 import '@mk-imagine/spa-slides/styles.css';
+import './fixture.css';
 
 const POINTS = Array.from({ length: 41 }, (_, i): [number, number] => [i, (i / 40) ** 2]);
 const SERIES = trace(POINTS);
@@ -111,6 +112,16 @@ mountDeck(
         <Bar at={0.5} value={6} range={[5, 7]} thickness={60} series={1} name="first" />
         <Bar at={1.5} value={3} thickness={60} series={2} name="second" />
       </Plot>
+    </Slide>
+
+    {/* 9: a chart in a box that cuts it off, so readouts near its right edge are cut off too */}
+    <Slide title="Clipped readouts">
+      <div className="clips">
+        <Plot width={900} height={360} x={{ domain: [0, 40] }} y={{ domain: [0, 1] }} label="A chart wider than its box">
+          <AxisX label="Trial" />
+          <Line series={1} data={POINTS} name="a series with a long name for its readout" />
+        </Plot>
+      </div>
     </Slide>
   </Deck>,
 );

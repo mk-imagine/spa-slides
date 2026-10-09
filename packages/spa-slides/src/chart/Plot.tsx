@@ -1,7 +1,7 @@
 import { useId, useMemo, useRef, type ReactNode } from 'react';
 import { useSlideIndex } from '../interactive/runtime.js';
 import { PlotContext } from './context.js';
-import type { HoverMark } from './hover.js';
+import { HOVER_ATTRIBUTE, type HoverMark } from './hover.js';
 import { Legend, type LegendItem } from './Legend.js';
 import { Readout } from './Readout.js';
 import { makeScale, type AxisSpec } from './scales.js';
@@ -74,7 +74,16 @@ export function Plot({ width, height, x, y, margin, label, legend, reveal, hover
   );
 
   const plot = (
-    <svg ref={svg} className="sps-plot" width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label}>
+    <svg
+      ref={svg}
+      className="sps-plot"
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      role="img"
+      aria-label={label}
+      {...(hover ? { [HOVER_ATTRIBUTE]: `${m.left} ${m.top} ${innerWidth} ${innerHeight}` } : {})}
+    >
       <defs>
         <clipPath id={clipId}>
           <rect x={0} y={0} width={innerWidth} height={innerHeight} />
@@ -84,7 +93,7 @@ export function Plot({ width, height, x, y, margin, label, legend, reveal, hover
         <PlotContext.Provider value={state}>
           {children}
           {/* After every mark, so it reads what each has just drawn. */}
-          {hover && <Readout svg={svg} slide={slide} margin={m} width={width} legend={legend ?? []} />}
+          {hover && <Readout svg={svg} slide={slide} margin={m} width={width} height={height} legend={legend ?? []} />}
         </PlotContext.Provider>
       </g>
     </svg>
