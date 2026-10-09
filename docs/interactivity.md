@@ -234,6 +234,22 @@ Hover never reaches the PDF or the screenshots, so it adds nothing a still has t
 should still exercise it, since a readout near the edge of a slide can overflow it. Slides 12 and 21
 are the first to use it.
 
+**Built.** One pointer for the deck, in slide coordinates, sent by the audience window and the
+speaker view's current-slide frame and drawn as a dot wherever the mouse is not; `usePointerOn`
+gives it to anything that should answer it. Every chart answers it with a readout, on by default:
+values and ranges on a bar, anywhere along its row; the nearest lines at the pointer's x elsewhere,
+with their bands' ranges. Marks report what they have drawn, so a chart needs nothing added, and a
+replay answers only for what it has drawn so far. The talk names a few marks and turns the readout
+off on four schematics.
+
+Before it, step 2's replays became library structures: `reveal` on a Plot that every mark follows,
+`<Playhead>`, `<Replay>` for the common case, `useStepValue`, and `sps-dimmed`. The talk's figures
+lost their hand-rolled replay code to them.
+
+Not yet: the verifier does not hover, so a readout that overflows a slide near its edge would pass.
+WebKit from disk carries the pointer only from the speaker view to the projector, as spike 4 found
+for the key.
+
 ### 4. Spike: a live model
 
 *The live-model spike.*
