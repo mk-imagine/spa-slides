@@ -234,6 +234,10 @@ Hover never reaches the PDF or the screenshots, so it adds nothing a still has t
 should still exercise it, since a readout near the edge of a slide can overflow it. Slides 12 and 21
 are the first to use it.
 
+**Spiked.** [Spike 5](interactivity-spike-5.md) answered all four: the pane receives the mouse, the
+mirror adds no measurable error, every move arrives in a few milliseconds, and a click in the pane
+navigates nothing. The one change it asks for is that the pane stop hiding an idle cursor.
+
 **Built.** One pointer for the deck, in slide coordinates, sent by the audience window and the
 speaker view's current-slide frame and drawn as a dot wherever the mouse is not; `usePointerOn`
 gives it to anything that should answer it. Every chart answers it with a readout, on by default:
@@ -320,6 +324,7 @@ sources and controls, and each should leave these checks passing rather than add
 | How is drift between the two versions caught? | Spike 3: prose equality, figures excluded |
 | What key toggles the still, and is it safe in the speaker view? | Spike 4: `t`, bound through Reveal; it navigates nothing |
 | Does the toggle work outside Chromium? | Spike 4: Firefox yes; WebKit over http, and from disk only from the speaker view |
+| Can the projector mirror the presenter's pointer from the speaker view? | Spike 5: yes, exactly, in all three browsers |
 
 ## Cost, honestly
 
