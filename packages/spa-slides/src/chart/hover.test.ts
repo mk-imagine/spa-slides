@@ -76,13 +76,13 @@ describe('barAt', () => {
   const y = makeScale({ domain: [0, 2] }, [0, 200]);
   const bar: HoverMark = { kind: 'bar', name: 'first', orientation: 'horizontal', at: 1, base: 0, value: 6, range: [5, 8], thickness: 20 };
 
-  it('finds the bar under the pointer, its whisker included', () => {
+  it('finds the bar anywhere along its row, its labels included', () => {
     expect(barAt([bar], x, y, { x: 30, y: 105 })).toBe(bar);
-    expect(barAt([bar], x, y, { x: 75, y: 100 })).toBe(bar);
+    expect(barAt([bar], x, y, { x: 99, y: 100 })).toBe(bar);
+    expect(barAt([bar], x, y, { x: -40, y: 95 })).toBe(bar);
   });
 
-  it('finds nothing beside it or far past its end', () => {
+  it('finds nothing between rows', () => {
     expect(barAt([bar], x, y, { x: 30, y: 140 })).toBeUndefined();
-    expect(barAt([bar], x, y, { x: 99, y: 100 })).toBeUndefined();
   });
 });

@@ -114,18 +114,16 @@ export function lineRows(marks: readonly HoverMark[], legend: readonly LegendIte
     .slice(0, limit);
 }
 
-/** The bar under a point of the data area, in the plot's pixels, if any: on the bar, its whisker, or just off its end. */
+/**
+ * The bar whose row (or column) a point is in, in the plot's pixels, if any. Anywhere along it
+ * counts, its labels included: pointing at a bar's value or its row's name asks about that bar.
+ */
 export function barAt(marks: readonly HoverMark[], x: Scale, y: Scale, point: { x: number; y: number }): HoverBar | undefined {
   return marks
     .filter((m): m is HoverBar => m.kind === 'bar')
     .find((bar) => {
       const horizontal = bar.orientation === 'horizontal';
-      const [across, along] = horizontal ? [y, x] : [x, y];
-      const center = across(bar.at);
-      const offset = horizontal ? point.y - center : point.x - center;
-      if (Math.abs(offset) > bar.thickness / 2) return false;
-      const reach = [bar.base, bar.value, ...(bar.range ?? [])].map(along);
-      const position = horizontal ? point.x : point.y;
-      return position >= Math.min(...reach) - bar.thickness / 2 && position <= Math.max(...reach) + bar.thickness / 2;
+      const center = (horizontal ? y : x)(bar.at);
+      return Math.abs((horizontal ? point.y : point.x) - center) <= bar.thickness / 2;
     });
 }
