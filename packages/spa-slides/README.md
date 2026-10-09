@@ -153,6 +153,14 @@ function TwoClocks() {
 
 The click is the position, and the clock only animates between keyframes, so the speaker view, going back a slide and print all follow the click. `replay(frames)` and `trace(points)` turn a position into state: any position directly, and the same state every time.
 
+### Hover, and the presenter's pointer
+
+Every chart answers the pointer with the values under it, as Plotly's do, with nothing added to the chart: on a bar, its value and range; elsewhere, a line across at the pointer with the values of the nearest lines there, and the range of any band in the same color. A mark is named in the readout by its `name`, else its text `label`, else its legend entry. A replay answers only for what it has drawn so far. `hover={false}` on a `Plot` turns it off, for a schematic whose values are not the point.
+
+The projector mirrors the presenter's pointer. Point at the slide in the speaker view and the projector shows a dot there, and every chart's readout with it; point at the projector and the speaker view shows it. The speaker view's upcoming-slide pane never sends. The dot's color and size are the `--sps-pointer-color` and `--sps-pointer-radius` tokens.
+
+Anything else that should answer a pointer reads it with `usePointerOn(slide)`, never the mouse, so that it answers the presenter's too: it gives the position on that slide in slide coordinates, and says whether it is mirrored. `useSlideIndex(ref)` finds the slide an element is on.
+
 ### What shows the still
 
 | The still shows | Because |
@@ -229,5 +237,6 @@ Fonts (Inter and JetBrains Mono) are bundled rather than taken from the system, 
 - 1920 × 1080 slides, scaled to any screen
 - Speaker view (press `S`), which works when the deck is opened from disk
 - `T` switches the current slide's interactive figures between still and live, in every window
+- The presenter's pointer, mirrored between the speaker view and the projector, with every chart's hover readout
 - PDF export: open `index.html?print-pdf` and print, one page per slide
 - Single-file build: scripts, styles, fonts, and imported images are inlined; `public/` files are copied beside it

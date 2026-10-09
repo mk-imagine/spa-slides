@@ -247,6 +247,60 @@ describe('interactive figures', () => {
     }, 15_000);
   });
 
+  describe('hover', () => {
+    const BARS = 7;
+    /** Moves the mouse to a point in data units of the chart on the slide shown, whose x domain starts at 0. */
+    const hover = async (page: Page, dataX: number, dataY: number, xMax: number, yDomain: [number, number]) => {
+      const [cx, cy] = await page.evaluate(
+        ([dataX, dataY, xMax, y0, y1]) => {
+          const svg = document.querySelector<SVGSVGElement>('section.present svg.sps-plot')!;
+          const box = svg.getBoundingClientRect();
+          const units = box.width / svg.viewBox.baseVal.width;
+          // The library's default margins: 104 left, 40 right, 24 top, 88 bottom, on a 900 × 360 plot.
+          const px = 104 + ((900 - 144) * dataX) / xMax;
+          const py = 24 + ((360 - 112) * (dataY - y0)) / (y1 - y0);
+          return [box.left + px * units, box.top + py * units] as const;
+        },
+        [dataX, dataY, xMax, ...yDomain] as const,
+      );
+      await page.mouse.move(cx, cy);
+    };
+    const readout = (page: Page) => page.locator('section.present .sps-hover__text').allTextContents();
+
+    it('answers a hover over a line with the value there, in this window and the other', async () => {
+      const context = await browser.newContext();
+      const watching = await open(context, '?sps-verify=still', REPLAY);
+      const page = await open(context, '?sps-verify=still', REPLAY);
+      // y = (x / 40)², so 0.25 at x = 20; the y axis runs up from 0.
+      await hover(page, 20, 0.25, 40, [1, 0]);
+      await expect.poll(() => readout(page)).toEqual(['20.0', '0.25']);
+      await expect.poll(() => readout(watching)).toEqual(['20.0', '0.25']);
+      await context.close();
+    });
+
+    it('says nothing about data a replay has not drawn yet', async () => {
+      const context = await browser.newContext();
+      const page = await open(context, '?sps-verify=live', REPLAY);
+      await hover(page, 20, 0.25, 40, [1, 0]);
+      await page.waitForTimeout(300);
+      expect(await readout(page)).toEqual([]);
+      await page.keyboard.press('ArrowRight');
+      await hover(page, 21, 0.25, 40, [1, 0]);
+      await expect.poll(() => readout(page)).toEqual(['21.0', '0.28']);
+      await context.close();
+    });
+
+    it('answers a hover over a bar with its name, value and range', async () => {
+      const context = await browser.newContext();
+      const page = await open(context, '', BARS);
+      await hover(page, 3, 0.5, 10, [0, 2]);
+      await expect.poll(() => readout(page)).toEqual(['first', '6.00 (5.00–7.00)']);
+      await hover(page, 2, 1.5, 10, [0, 2]);
+      await expect.poll(() => readout(page)).toEqual(['second', '3.00']);
+      await context.close();
+    });
+  });
+
   describe('the key', () => {
     it('switches the slide in every window, including one opened afterwards', async () => {
       const context = await browser.newContext();
@@ -295,7 +349,7 @@ describe('interactive figures', () => {
     };
 
     beforeAll(async () => {
-      result = await verifyDeck({ deckDir, expectSlides: 7 });
+      result = await verifyDeck({ deckDir, expectSlides: 8 });
     }, 180_000);
 
     it('screenshots and prints every still', () => {

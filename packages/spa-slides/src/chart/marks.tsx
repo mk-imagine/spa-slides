@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { line as d3line } from 'd3-shape';
 import { trace } from '../interactive/sources.js';
-import { markClass, position, reached, usePlot, type MarkTone } from './context.js';
+import { markClass, position, reached, useHoverMark, usePlot, type MarkTone } from './context.js';
 
 /** Where a label sits relative to its anchor point. */
 export type LabelPosition = 'right' | 'left' | 'above' | 'below';
@@ -58,6 +58,8 @@ export interface LineProps {
   labelOffset?: [number, number];
   /** Drawn whole while the chart is revealed, for what is known in advance, such as a prediction. */
   whole?: boolean;
+  /** What a hover readout calls it. Default: its `label` if that is text, or else its legend entry. */
+  name?: string;
 }
 
 /** The part of a series a revealed chart shows: up to the reveal, with the last point interpolated. */
@@ -65,9 +67,11 @@ function revealed(data: readonly Point[], reveal: number | undefined, whole: boo
   return whole || reveal === undefined ? [...data] : trace(data).at(reveal);
 }
 
-export function Line({ data: all, series, tone, ordinal, dashed = false, label, labelPosition = 'right', labelOffset, whole = false }: LineProps) {
+export function Line({ data: all, series, tone, ordinal, dashed = false, label, labelPosition = 'right', labelOffset, whole = false, name }: LineProps) {
   const { x, y, clipId, reveal } = usePlot();
   const data = revealed(all, reveal, whole);
+  // A line labeled in words is called that in a readout too.
+  useHoverMark({ kind: 'line', name: name ?? (typeof label === 'string' ? label : undefined), series, ordinal, tone, dashed, points: data });
   const path = d3line<Point>()
     .defined((p) => p[1] !== null && Number.isFinite(p[1]))
     .x((p) => position(x, p[0], 'x'))
@@ -106,6 +110,7 @@ export function Band({ data: all, series, tone, ordinal, whole = false }: BandPr
   const low = revealed(all.map(([px, l]) => [px, l]), reveal, whole);
   const high = revealed(all.map(([px, , h]) => [px, h]), reveal, whole);
   const data: BandPoint[] = low.map(([px, l], i) => [px, l, high[i]?.[1] ?? null]);
+  useHoverMark({ kind: 'band', series, ordinal, tone, points: data });
   const defined = data.filter((p): p is [number, number, number] => p[1] !== null && p[2] !== null && Number.isFinite(p[1]) && Number.isFinite(p[2]));
   if (defined.length < 2) return null;
   const top = defined.map((p) => `${position(x, p[0], 'x')},${position(y, p[2], 'y')}`);
@@ -282,6 +287,8 @@ export interface BarProps {
   label?: ReactNode;
   /** Drawn whole while the chart is revealed. */
   whole?: boolean;
+  /** What a hover readout calls it. Default: its legend entry. */
+  name?: string;
 }
 
 /**
@@ -289,7 +296,7 @@ export interface BarProps {
  * While the chart is revealed, a horizontal bar grows with the reveal and gets its whisker and label
  * once it is whole; a vertical bar appears once the reveal reaches it.
  */
-export function Bar({ orientation = 'horizontal', at, value: full, base = 0, thickness = 32, series, tone, ordinal, range: fullRange, label: fullLabel, whole = false }: BarProps) {
+export function Bar({ orientation = 'horizontal', at, value: full, base = 0, thickness = 32, series, tone, ordinal, range: fullRange, label: fullLabel, whole = false, name }: BarProps) {
   const plot = usePlot();
   const { x, y, xType, yType, reveal } = plot;
   const horizontal = orientation === 'horizontal';
@@ -298,11 +305,14 @@ export function Bar({ orientation = 'horizontal', at, value: full, base = 0, thi
     throw new Error('[spa-slides] <Bar> needs a linear value axis; on a log axis, use <Marker> as a dot plot');
   }
   const farEnd = Math.max(full, base, ...(fullRange ?? []));
-  if (!reached(plot, horizontal ? Math.min(full, base) : at, whole)) return null;
+  const shown = reached(plot, horizontal ? Math.min(full, base) : at, whole);
   const complete = reached(plot, horizontal ? farEnd : at, whole);
   const value = complete || reveal === undefined ? full : full >= base ? Math.min(full, reveal) : full;
   const range = complete ? fullRange : undefined;
   const label = complete ? fullLabel : undefined;
+  // A bar still growing answers a hover only once it is whole: until then its value is not its value.
+  useHoverMark(shown && complete ? { kind: 'bar', name, series, ordinal, tone, orientation, at, base, value, range, thickness } : null);
+  if (!shown) return null;
   const valueAxis = horizontal ? 'x' : 'y';
   const crossAxis = horizontal ? 'y' : 'x';
   const valueScale = horizontal ? x : y;

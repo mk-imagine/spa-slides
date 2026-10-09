@@ -15,7 +15,7 @@ export interface Keyframe {
 export interface TimelineOptions {
   /** Milliseconds to travel between keyframes, unless a keyframe says otherwise. Default: 600. */
   duration?: number;
-  /** Maps elapsed time (0–1) to distance travelled (0–1). Default: linear, so a replay runs at a steady rate. */
+  /** Maps elapsed time (0–1) to distance traveled (0–1). Default: linear, so a replay runs at a steady rate. */
   easing?: (t: number) => number;
 }
 
